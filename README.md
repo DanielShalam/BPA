@@ -1,1 +1,1 @@
-# SOT - The Self-Optimal-Transport Feature Transform
+# SOT: The Self-Optimal-Transport Feature Transform
