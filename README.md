@@ -1,8 +1,8 @@
 # SOT: The Self-Optimal-Transport Feature Transform
 
-This repository provides the official PyTorch implementation and pretrained models for **SOT** (The **S**elf-**O**ptimal-**T**ransport), as described in the paper (paper_hyperlink).
+This repository provides the official PyTorch implementation and pretrained models for **SOT** (The **S**elf-**O**ptimal-**T**ransport), as described in the paper [The Self-Optimal-Transport Feature Transform](https://arxiv.org/abs/2204.03065).
 
-![alt text](https://i.ibb.co/m8Nw7gx/SOT.png)
+![SOT](https://i.ibb.co/m8Nw7gx/SOT.png)
 
 The Self-Optimal-Transport (SOT) feature transform is designed to upgrade the set of features of a data instance to facilitate downstream matching or grouping related tasks. 
 
@@ -18,8 +18,17 @@ A particular min-cost-max-flow fractional matching problem, whose entropy regula
 | Content Cell  | Content Cell  |
 
 ## Running instructions
+### Clustering on the sphere
+We provide the code to reproduce the syntethic expriment as described in the paper.
+This can be beneficial in order to expriement with the SOT on a controlled data and can be used as a benchmark.
+    
+To run the expriemnt with the default arguments, simply run the script:
 
-### PT-MAP-SOT<sub>p</sub>
+        syntethic_exp/eval_unit.py
+        
+The script includes a variety of paramters that controls the structre of the data as well as additional plots configurations.
+    
+### Few-Shot Classification
 
 <details><summary>Dataset </summary>
 <p>
@@ -49,7 +58,7 @@ A particular min-cost-max-flow fractional matching problem, whose entropy regula
 <details><summary>Pretrained Models </summary>
 <p>
 
-    insert inst
+All pretrained weights for PT-MAP-SOT<sub>p</sub> can be downloaded from the [PT-MAP repository](https://github.com/yhu01/PT-MAP)
 
 </p>
 </details>
