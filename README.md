@@ -60,7 +60,12 @@ A particular min-cost-max-flow fractional matching problem, whose entropy regula
 
 #### If you find this repository useful in your research, please cite:
 
-    insert cite
+    @article{shalam2022self,
+      title={The Self-Optimal-Transport Feature Transform},
+      author={Shalam, Daniel and Korman, Simon},
+      journal={arXiv preprint arXiv:2204.03065},
+      year={2022}
+    }
 
 </p>
 
