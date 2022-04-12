@@ -42,7 +42,8 @@ The script includes a variety of paramters that controls the structre of the dat
 <details><summary>Running PT-MAP-SOT<sub>p</sub> </summary>
 <p>
 
-    insert inst
+Download and extract the featrues using the instructions on the [PT-MAP repository](https://github.com/yhu01/PT-MAP).
+Then, run ....
 
 </p>
 </details>
@@ -50,7 +51,7 @@ The script includes a variety of paramters that controls the structre of the dat
 <details><summary>Running PT-MAP-SOT<sub>t</sub> </summary>
 <p>
 
-    insert inst
+Download the S2M2_R weights as described [PT-MAP repository](https://github.com/nupurkmr9/S2M2_fewshot)
 
 </p>
 </details>
@@ -58,7 +59,7 @@ The script includes a variety of paramters that controls the structre of the dat
 <details><summary>Pretrained Models </summary>
 <p>
 
-All pretrained weights for PT-MAP-SOT<sub>p</sub> can be downloaded from the [PT-MAP repository](https://github.com/yhu01/PT-MAP)
+All pretrained weights and features for the PT-MAP-SOT<sub>p</sub> expriment can be downloaded from the [PT-MAP repository](https://github.com/yhu01/PT-MAP)
 
 </p>
 </details>
