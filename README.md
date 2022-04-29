@@ -27,12 +27,14 @@ A particular min-cost-max-flow fractional matching problem, whose entropy regula
 | Dataset       | Method                 | 5-Way 1-Shot  | 5-Way 1-Shot  |
 | ------------- |-------------           | ------------- | ------------- |
 | MiniImagenet  | PTMAP-SOT<sub>p</sub>  | 83.19         | 89.56         |
-| MiniImagenet  | PTMAP-SOT<sub>t</sub>  | 84.18         | 90.51         |
-| MiniImagenet  | PTMAP-SF-SOT           | 85.59         | 91.34         |
+|    | PTMAP-SOT<sub>t</sub>  | 84.18         | 90.51         |
+|    | PTMAP-SF-SOT           | 85.59         | 91.34         |
+|   |            |   |   |
 | CIFAR-FS      | PTMAP-SOT<sub>p</sub>  | 87.37         | 91.12         |
-| CIFAR-FS      | PTMAP-SF-SOT           | 89.94         | 92.83         |
+|        | PTMAP-SF-SOT           | 89.94         | 92.83         |
+|   |            |   |   |
 | CUB           | PTMAP-SOT<sub>p</sub>  | 91.90         | 94.63         |
-| CUB           | PTMAP-SF-SOT           | 95.80         | 97.12         |
+|            | PTMAP-SF-SOT           | 95.80         | 97.12         |
 
 ## Running instructions
 ### Clustering on the sphere
