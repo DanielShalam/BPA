@@ -24,10 +24,15 @@ A particular min-cost-max-flow fractional matching problem, whose entropy regula
 
 ## Few-shot classification results
 
-| First Header  | Second Header |
-| ------------- | ------------- |
-| Content Cell  | Content Cell  |
-| Content Cell  | Content Cell  |
+| Dataset       | Method                 | 5-Way 1-Shot  | 5-Way 1-Shot  |
+| ------------- |-------------           | ------------- | ------------- |
+| MiniImagenet  | PTMAP-SOT<sub>p</sub>  | 83.19         | 89.56         |
+| MiniImagenet  | PTMAP-SOT<sub>t</sub>  | 84.18         | 90.51         |
+| MiniImagenet  | PTMAP-SF-SOT           | 85.59         | 91.34         |
+| CIFAR-FS      | PTMAP-SOT<sub>p</sub>  | 87.37         | 91.12         |
+| CIFAR-FS      | PTMAP-SF-SOT           | 89.94         | 92.83         |
+| CUB           | PTMAP-SOT<sub>p</sub>  | 91.90         | 94.63         |
+| CUB           | PTMAP-SF-SOT           | 95.80         | 97.12         |
 
 ## Running instructions
 ### Clustering on the sphere
@@ -38,7 +43,7 @@ To run the expriemnt with the default arguments, simply run the script:
 
         syntethic_exp/eval_unit.py
         
-The script includes a variety of paramters that controls the structre of the data as well as additional plots configurations.
+The script includes a variety of paramters that controls the structre of the data as well as additional plot configurations.
     
 ### Few-Shot Classification
 
