@@ -37,4 +37,4 @@ def clustering_accuracy(true_row_labels, predicted_row_labels):
 
 def _make_cost_m(cm):
     s = np.max(cm)
-    return (- cm + s)
+    return - cm + s

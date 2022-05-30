@@ -30,11 +30,9 @@ def plot_3d_data(unit_clusters, labels,  std, std_idx, exp_idx, experiment=None)
 
     for s in sizes:
         if s == -1:
-            plt.subplot(111, projection='3d').scatter(
-                unit_clusters[:, 0], unit_clusters[:, 1], unit_clusters[:, 2], c=labels)
+            plt.subplot(111, projection='3d').scatter(unit_clusters[:, 0], unit_clusters[:, 1], unit_clusters[:, 2], c=labels)
         else:
-            plt.subplot(111, projection='3d').scatter(
-                unit_clusters[:, 0], unit_clusters[:, 1], unit_clusters[:, 2], c=labels, s=s)
+            plt.subplot(111, projection='3d').scatter(unit_clusters[:, 0], unit_clusters[:, 1], unit_clusters[:, 2], c=labels, s=s)
 
         ax = plt.gca()
         ax.set_yticklabels([])
@@ -47,8 +45,69 @@ def plot_3d_data(unit_clusters, labels,  std, std_idx, exp_idx, experiment=None)
         set_axes_equal(ax)
         if experiment is not None:
             experiment.log_figure(figure_name=f'{exp_idx}3d', figure=plt)
+
         plt.show(block=False)
         plt.close()
+
+
+def gather_metrics(metric_dict, idx, labels, cluster_labels):
+    metric_dict['Accuracy'][idx] += utils.clustering_accuracy(labels, cluster_labels)[0]
+    metric_dict['NMI'][idx] += normalized_mutual_info_score(labels, cluster_labels)
+    metric_dict['ARI'][idx] += adjusted_rand_score(labels, cluster_labels)
+    return metric_dict
+
+
+def visualize_tsne(tsne, labels, name='', title='', experiment=None):
+    # extract x and y coordinates representing the positions of the images on T-SNE plot
+    tx = tsne[:, 0]
+    ty = tsne[:, 1]
+    # scale and move the coordinates so they fit [0; 1] range
+    tx = scale_to_01_range(tx)
+    ty = scale_to_01_range(ty)
+
+    # visualize the plot: samples as colored points
+    visualize_tsne_points(tx, ty, labels, name=name, title=title, experiment=experiment)
+
+
+def visualize_tsne_points(tx, ty, labels, name, title, experiment=None):
+    # initialize matplotlib plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # for every class, we'll add a scatter plot separately
+    for label in colors_per_class:
+        # find the samples of the current class in the data
+        indices = [i for i, l in enumerate(labels) if l == label]
+
+        # extract the coordinates of the points of this class only
+        current_tx = np.take(tx, indices)
+        current_ty = np.take(ty, indices)
+
+        # convert the class color to matplotlib format:
+        # BGR -> RGB, divide by 255, convert to np.array
+        color = np.array([colors_per_class[label][::-1]], dtype=float) / 255
+
+        # add a scatter plot with the correponding color and label
+        ax.scatter(current_tx, current_ty, c=color, label=label)
+
+    ax.set_yticklabels([])
+    ax.set_xticklabels([])
+
+    plt.title(title)
+
+    if experiment is not None:
+        experiment.log_figure(figure_name=name, figure=plt)
+
+    # finally, show the plot
+    plt.show(block=True)
+    plt.close()
+
+
+def scale_to_01_range(x):
+    # scaling values to [0, 1]
+    value_range = (np.max(x) - np.min(x))
+    starts_from_zero = x - np.min(x)
+    return starts_from_zero / value_range
 
 
 def set_axes_equal(ax):
@@ -78,69 +137,3 @@ def set_axes_equal(ax):
     ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
     ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
     ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
-
-
-def gather_metrics(metric_dict, idx, labels, cluster_labels):
-    metric_dict['Accuracy'][idx] += utils.clustering_accuracy(labels, cluster_labels)[0]
-    metric_dict['NMI'][idx] += normalized_mutual_info_score(labels, cluster_labels)
-    metric_dict['ARI'][idx] += adjusted_rand_score(labels, cluster_labels)
-    return metric_dict
-
-
-# scale and move the coordinates so they fit [0; 1] range
-def scale_to_01_range(x):
-    # compute the distribution range
-    value_range = (np.max(x) - np.min(x))
-
-    # move the distribution so that it starts from zero
-    # by extracting the minimal value from all its values
-    starts_from_zero = x - np.min(x)
-
-    # make the distribution fit [0; 1] by dividing by its range
-    return starts_from_zero / value_range
-
-
-def visualize_tsne(tsne, labels, batch_num, title, experiment=None):
-    # extract x and y coordinates representing the positions of the images on T-SNE plot
-    tx = tsne[:, 0]
-    ty = tsne[:, 1]
-    # scale and move the coordinates so they fit [0; 1] range
-    tx = scale_to_01_range(tx)
-    ty = scale_to_01_range(ty)
-
-    # visualize the plot: samples as colored points
-    visualize_tsne_points(tx, ty, labels, batch_num=batch_num, title=title, experiment=experiment)
-
-
-def visualize_tsne_points(tx, ty, labels, batch_num, title, experiment=None):
-    # initialize matplotlib plot
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-
-    # for every class, we'll add a scatter plot separately
-    for label in colors_per_class:
-        # find the samples of the current class in the data
-        indices = [i for i, l in enumerate(labels) if l == label]
-
-        # extract the coordinates of the points of this class only
-        current_tx = np.take(tx, indices)
-        current_ty = np.take(ty, indices)
-
-        # convert the class color to matplotlib format:
-        # BGR -> RGB, divide by 255, convert to np.array
-        color = np.array([colors_per_class[label][::-1]], dtype=float) / 255
-
-        # add a scatter plot with the correponding color and label
-        ax.scatter(current_tx, current_ty, c=color, label=label)
-
-    ax.set_yticklabels([])
-    ax.set_xticklabels([])
-
-    plt.title(title)
-
-    if experiment is not None:
-        experiment.log_figure(figure_name=batch_num, figure=plt)
-
-    # finally, show the plot
-    plt.show(block=True)
-    plt.close()
