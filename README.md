@@ -10,12 +10,31 @@ The transformed set encodes a rich representation of high order relations betwee
 
 A particular min-cost-max-flow fractional matching problem, whose entropy regularized version can be approximated by an optimal transport (OT) optimization, results in our transductive transform which is efficient, differentiable, equivariant, parameterless and probabilistically interpretable.
 
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-cifar-fs-5)](https://paperswithcode.com/sota/few-shot-image-classification-on-cifar-fs-5?p=the-self-optimal-transport-feature-transform)
+
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-cifar-fs-5-1)](https://paperswithcode.com/sota/few-shot-image-classification-on-cifar-fs-5-1?p=the-self-optimal-transport-feature-transform)
+
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-cub-200-5-1)](https://paperswithcode.com/sota/few-shot-image-classification-on-cub-200-5-1?p=the-self-optimal-transport-feature-transform)
+
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-cub-200-5)](https://paperswithcode.com/sota/few-shot-image-classification-on-cub-200-5?p=the-self-optimal-transport-feature-transform)
+
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-mini-2)](https://paperswithcode.com/sota/few-shot-image-classification-on-mini-2?p=the-self-optimal-transport-feature-transform)
+
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-mini-3)](https://paperswithcode.com/sota/few-shot-image-classification-on-mini-3?p=the-self-optimal-transport-feature-transform)
+
 ## Few-shot classification results
 
-| First Header  | Second Header |
-| ------------- | ------------- |
-| Content Cell  | Content Cell  |
-| Content Cell  | Content Cell  |
+| Dataset       | Method                 | 5-Way 1-Shot  | 5-Way 5-Shot  |
+| ------------- |-------------           | ------------- | ------------- |
+| MiniImagenet  | PTMAP-SOT<sub>p</sub>  | 83.19         | 89.56         |
+|    | PTMAP-SOT<sub>t</sub>  | 84.18         | 90.51         |
+|    | PTMAP-SF-SOT           | 85.59         | 91.34         |
+|   |            |   |   |
+| CIFAR-FS      | PTMAP-SOT<sub>p</sub>  | 87.37         | 91.12         |
+|        | PTMAP-SF-SOT           | 89.94         | 92.83         |
+|   |            |   |   |
+| CUB           | PTMAP-SOT<sub>p</sub>  | 91.90         | 94.63         |
+|            | PTMAP-SF-SOT           | 95.80         | 97.12         |
 
 ## Running instructions
 ### Clustering on the sphere
@@ -26,7 +45,7 @@ To run the expriemnt with the default arguments, simply run the script:
 
         syntethic_exp/eval_unit.py
         
-The script includes a variety of paramters that controls the structre of the data as well as additional plots configurations.
+The script includes a variety of paramters that controls the structre of the data as well as additional plot configurations.
     
 ### Few-Shot Classification
 
