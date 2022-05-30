@@ -2,7 +2,7 @@
 
 This repository provides the official PyTorch implementation and pretrained models for **SOT** (The **S**elf-**O**ptimal-**T**ransport), as described in the paper [The Self-Optimal-Transport Feature Transform](https://arxiv.org/abs/2204.03065).
 
-![SOT](https://i.ibb.co/m8Nw7gx/SOT.png)
+![SOT](./sot_workflow.png?raw=true)
 
 The Self-Optimal-Transport (SOT) feature transform is designed to upgrade the set of features of a data instance to facilitate downstream matching or grouping related tasks. 
 
@@ -51,26 +51,24 @@ The script includes a variety of paramters that controls the structre of the dat
 
 <details><summary>Dataset </summary>
 <p>
-
-    <details><summary>Datasets </summary>
-    <p>
-    </p>
+    
+Work in progress...
+    
 </p>
 </details>
 
 <details><summary>Running PT-MAP-SOT<sub>p</sub> </summary>
 <p>
 
-Download and extract the featrues using the instructions on the [PT-MAP repository](https://github.com/yhu01/PT-MAP).
-Then, run ....
+Work in progress...
 
 </p>
 </details>
 
 <details><summary>Running PT-MAP-SOT<sub>t</sub> </summary>
 <p>
-
-Download the S2M2_R weights as described [PT-MAP repository](https://github.com/nupurkmr9/S2M2_fewshot)
+    
+Work in progress...
 
 </p>
 </details>
@@ -99,3 +97,8 @@ All pretrained weights and features for the PT-MAP-SOT<sub>p</sub> expriment can
 </p>
 
 ## Acknowledgment
+[Leveraging the Feature Distribution in Transfer-based Few-Shot Learning](https://github.com/yhu01/PT-MAP)
+
+[S2M2 Charting the Right Manifold: Manifold Mixup for Few-shot Learning](https://arxiv.org/pdf/1907.12087.pdf)
+
+[Few-Shot Learning via Embedding Adaptation with Set-to-Set Functions](https://arxiv.org/pdf/1812.03664.pdf)
