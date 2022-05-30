@@ -38,15 +38,15 @@ A particular min-cost-max-flow fractional matching problem, whose entropy regula
 
 ## Running instructions
 ### Clustering on the sphere
-We provide the code to reproduce the syntethic expriment as described in the paper.
-This can be beneficial in order to expriement with the SOT on a controlled data and can be used as a benchmark.
+We provide the code to reproduce the synthetic experiment as described in the paper.
+This can be beneficial to experiment with the SOT on controlled data and can be used as a benchmark.
     
 To run the expriemnt with the default arguments, simply run the script:
 
-        syntethic_exp/eval_unit.py
+        synthetic_exp/eval_unit.py
         
-The script includes a variety of paramters that controls the structre of the data as well as additional plot configurations.
-    
+The script includes a variety of parameters that controls the structure of the data as well as additional plot configurations.
+
 ### Few-Shot Classification
 
 <details><summary>Dataset </summary>
