@@ -24,7 +24,7 @@ A particular min-cost-max-flow fractional matching problem, whose entropy regula
 
 ## Few-shot classification results
 
-| Dataset       | Method                 | 5-Way 1-Shot  | 5-Way 1-Shot  |
+| Dataset       | Method                 | 5-Way 1-Shot  | 5-Way 5-Shot  |
 | ------------- |-------------           | ------------- | ------------- |
 | MiniImagenet  | PTMAP-SOT<sub>p</sub>  | 83.19         | 89.56         |
 |    | PTMAP-SOT<sub>t</sub>  | 84.18         | 90.51         |
