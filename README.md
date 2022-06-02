@@ -41,11 +41,11 @@ A particular min-cost-max-flow fractional matching problem, whose entropy regula
 We provide the code to reproduce the synthetic experiment as described in the paper.
 This can be beneficial to experiment with the SOT on controlled data and can be used as a benchmark.
     
-To run the expriemnt with the default arguments, simply run the script:
+To run the experiment with the default arguments, simply run the script:
 
         synthetic_exp/eval_unit.py
         
-The script includes a variety of parameters that controls the structure of the data as well as additional plot configurations.
+The script includes a variety of parameters that control the structure of the data as well as additional plot configurations.
 
 ### Few-Shot Classification
 
