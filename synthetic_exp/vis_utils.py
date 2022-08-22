@@ -92,7 +92,7 @@ def visualize_tsne_points(tx, ty, labels, name, title, experiment=None):
 
     ax.set_yticklabels([])
     ax.set_xticklabels([])
-
+    plt.grid()
     plt.title(title)
 
     if experiment is not None:
