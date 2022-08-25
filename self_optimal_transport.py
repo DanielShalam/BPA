@@ -5,7 +5,7 @@ import math
 class SOT(torch.nn.Module):
     supported_distances = ['cosine', 'euclidean']
 
-    def __init__(self, distance_metric: str = 'euclidean', ot_reg: float = 0.1, sinkhorn_iterations: int = 5,
+    def __init__(self, distance_metric: str = 'euclidean', ot_reg: float = 0.1, sinkhorn_iterations: int = 10,
                  sigmoid: bool = True):
         """
         :param distance_metric - For Cost matrix calculation (currently optinal to [cosine, euclidean]).
@@ -38,7 +38,6 @@ class SOT(torch.nn.Module):
         :param max_temperature - Scale the transformed matrix to [0, 1]. usually helps.
         """
         batched = True if len(X.shape) > 2 else False
-
         # calculate the self-distance matrix according to the requested distance metric
         if self.distance_metric == 'euclidean':
             M = torch.cdist(X, X, p=2)
@@ -64,7 +63,7 @@ class SOT(torch.nn.Module):
 
         # divide the transportation matrix by its maximum for better contrastive effect (usually helps)
         if max_temperature:
-            max_probability = features.max().item() if not batched else features.max(dim=0).values
+            max_probability = features.max().item() if not batched else features.amax(dim=(1, 2))
             features = features / max_probability
         else:
             max_probability = 1
