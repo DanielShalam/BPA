@@ -37,6 +37,7 @@ class SOT(torch.nn.Module):
         :param y_support (optional) - For few-shot classification. Support set labels (indexed as the first rows of X).
         :param max_temperature - Scale the transformed matrix to [0, 1]. usually helps.
         """
+        X = torch.randn((5, 30, 50))
         batched = True if len(X.shape) > 2 else False
         # calculate the self-distance matrix according to the requested distance metric
         if self.distance_metric == 'euclidean':
@@ -63,7 +64,7 @@ class SOT(torch.nn.Module):
 
         # divide the transportation matrix by its maximum for better contrastive effect (usually helps)
         if max_temperature:
-            max_probability = features.max().item() if not batched else features.amax(dim=(1, 2))
+            max_probability = features.max().item() if not batched else features.amax(dim=(1, 2), keepdim=True)
             features = features / max_probability
         else:
             max_probability = 1
