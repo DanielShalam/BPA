@@ -1,6 +1,0 @@
-srun -w dgx03 -G 1 --ntasks 1 --cpus-per-task 32 --container-image=/users/pilot/tester3/Daniel/SOT.sqsh --pty /bin/bash
-
-cd
-cd Daniel/SOT
-
-python train.py --data_path /root/Daniel/datasets/MiniImagenet/

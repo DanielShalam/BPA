@@ -52,9 +52,9 @@ class distLinear(nn.Module):
             WeightNorm.apply(self.L, 'weight', dim=0)  # split the weight update component to direction and norm
 
         if outdim <= 200:
-            self.scale_factor = 2;  # a fixed scale factor to scale the output of cos value into a reasonably large input for softmax
+            self.scale_factor = 2  # a fixed scale factor to scale the output of cos value into a reasonably large input for softmax
         else:
-            self.scale_factor = 10;  # in omniglot, a larger scale factor is required to handle >1000 output classes.
+            self.scale_factor = 10  # in omniglot, a larger scale factor is required to handle >1000 output classes.
 
     def forward(self, x):
         x_norm = torch.norm(x, p=2, dim=1).unsqueeze(1).expand_as(x)
@@ -136,12 +136,6 @@ class WideResNet(nn.Module):
         self.bn1 = nn.BatchNorm2d(nChannels[3])
         self.relu = nn.ReLU(inplace=True)
         self.nChannels = nChannels[3]
-
-        if loss_type == 'softmax':
-            self.linear = nn.Linear(nChannels[3], int(num_classes))
-            self.linear.bias.data.fill_(0)
-        else:
-            self.linear = distLinear(nChannels[3], int(num_classes))
 
         self.num_classes = num_classes
         if flatten:

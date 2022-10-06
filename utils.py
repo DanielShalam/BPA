@@ -1,10 +1,8 @@
 import argparse
-
+import random
 import numpy as np
 import torch
 from torch import optim
-from sklearn.metrics import confusion_matrix
-from scipy.optimize import linear_sum_assignment as linear_assignment
 from torch.utils.data import DataLoader
 
 from datasets.samplers import CategoriesSampler
@@ -63,6 +61,15 @@ def get_method(args, sot):
         raise ValueError(f'Not implemented method. available methods are: {list(methods.keys())}')
 
 
+def load_weights(model, path):
+    """
+    Load pretrained weights from given path.
+    """
+    state_dict = torch.load(path)
+    model.load_state_dict(state_dict['state'])
+    return model
+
+
 def get_fs_labels(num_way, num_shot, num_query):
     """
     Prepare few-shot labels. For example for 5-way, 1-shot, 2-query: [0, 1, 2, 3, 4, 0, 0, 1, 1, ...]
@@ -84,3 +91,14 @@ def bool_flag(s):
         return True
     else:
         raise argparse.ArgumentTypeError("invalid value for a boolean flag")
+
+
+def set_seed(seed: int):
+    """
+    seed.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.random.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+
