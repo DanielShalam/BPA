@@ -181,6 +181,9 @@ if __name__ == '__main__':
                 # project samples to the sphere
                 normalized_clusters = F.normalize(clusters, dim=-1, p=2)
 
+                M = torch.mm(normalized_clusters, normalized_clusters.t())
+
+
                 # plot the 3d data for some random experiments
                 if args.plot_3d and dim == 3 and exp_idx in [0, 4]:
                     vis_utils.plot_3d_data(unit_clusters=normalized_clusters, labels=labels, std=std, std_idx=std_idx,
