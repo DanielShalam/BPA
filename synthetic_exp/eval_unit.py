@@ -183,7 +183,6 @@ if __name__ == '__main__':
 
                 M = torch.mm(normalized_clusters, normalized_clusters.t())
 
-
                 # plot the 3d data for some random experiments
                 if args.plot_3d and dim == 3 and exp_idx in [0, 4]:
                     vis_utils.plot_3d_data(unit_clusters=normalized_clusters, labels=labels, std=std, std_idx=std_idx,
@@ -199,6 +198,8 @@ if __name__ == '__main__':
                 cluster.fit(SOT_points)
                 sot_std_metrics = vis_utils.gather_metrics(sot_std_metrics, idx=std_idx, labels=labels,
                                                            cluster_labels=cluster.labels_)
+                print(points_std_metrics)
+                print(sot_std_metrics)
 
                 # plot the original and transformed clusters using TSNE
                 if args.plot_tsne:

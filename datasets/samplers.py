@@ -20,7 +20,7 @@ class CategoriesSampler:
             ind = torch.from_numpy(ind)
             self.m_ind.append(ind)
 
-        if self.set_name != 'train':
+        if self.set_name == 'val':
             for i_batch in range(self.num_episodes):
                 batch_gallery = []
                 batch_query = []
@@ -31,25 +31,31 @@ class CategoriesSampler:
                     batch_gallery.append(l[pos[: self.num_shot]])
                     batch_query.append(l[pos[self.num_shot: self.num_shot + self.num_query]])
 
-                batch = torch.cat(batch_gallery + batch_query)
+                # batch = torch.cat(batch_gallery + batch_query)
+                batch_gallery = torch.cat(batch_gallery).reshape(self.num_way, self.num_shot).T.reshape(-1)
+                batch_query = torch.cat(batch_query).reshape(self.num_way, self.num_query).T.reshape(-1)
+                batch = torch.cat((batch_gallery, batch_query))
                 self.batches.append(batch)
 
     def __len__(self):
         return self.num_episodes
 
     def __iter__(self):
-        if self.set_name == 'train':
+        if self.set_name != 'val':
             for batch_idx in range(self.num_episodes):
                 batch_gallery = []
                 batch_query = []
                 classes = torch.randperm(len(self.m_ind))[:self.num_way]
                 for c in classes:
-                        l = self.m_ind[c.item()]
-                        pos = torch.randperm(l.size()[0])
-                        batch_gallery.append(l[pos[: self.num_shot]])
-                        batch_query.append(l[pos[self.num_shot: self.num_shot + self.num_query]])
+                    l = self.m_ind[c.item()]
+                    pos = torch.randperm(l.size()[0])
+                    batch_gallery.append(l[pos[: self.num_shot]])
+                    batch_query.append(l[pos[self.num_shot: self.num_shot + self.num_query]])
 
-                batch = torch.cat(batch_gallery + batch_query)
+                # batch = torch.cat(batch_gallery + batch_query)
+                batch_gallery = torch.cat(batch_gallery).reshape(self.num_way, self.num_shot).T.reshape(-1)
+                batch_query = torch.cat(batch_query).reshape(self.num_way, self.num_query).T.reshape(-1)
+                batch = torch.cat((batch_gallery, batch_query))
                 yield batch
         else:
             for batch_idx in range(self.num_episodes):
