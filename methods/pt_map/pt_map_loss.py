@@ -12,22 +12,15 @@ def centerDatas(X: torch.Tensor, n_lsamples: int):
     return X
 
 
-def QRreduction(X: torch.Tensor):
-    X = torch.linalg.qr(X.permute(0, 2, 1)).R
-    X = X.permute(0, 2, 1)
-    return X
-
-
 # ---------  GaussianModel
 
 class GaussianModel:
-    def __init__(self, num_way: int, num_shot: int, num_query: int, lam: float, SOT):
+    def __init__(self, num_way: int, num_shot: int, num_query: int, lam: float):
         self.num_way = num_way
         self.num_shot = num_shot
         self.num_query = num_query
         self.n_lsamples = num_way * num_shot
         self.n_usamples = num_way * num_query
-        self.SOT = SOT
         self.lam = lam
         self.mus = None  # shape [n_ways][feat_dim]
 
@@ -67,7 +60,6 @@ class GaussianModel:
         r = torch.ones(1, self.num_way * self.num_query, device='cuda')
         c = torch.ones(1, self.num_way, device='cuda') * self.num_query
         p_xj_test = self.compute_optimal_transport(dist.unsqueeze(0)[:, self.n_lsamples:], r, c, epsilon=1e-6)
-        # p_xj_test = self.SOT.compute_log_sinkhorn(M=dist[self.n_lsamples:, :])
         p_xj[self.n_lsamples:] = p_xj_test
 
         p_xj[:self.n_lsamples].fill_(0)
@@ -111,7 +103,7 @@ class MAP:
         return P
 
 
-class PT_MAP(nn.Module):
+class PTMAPLoss(nn.Module):
     def __init__(self, args: dict, lam: float = 10, alpha: float = 0.2, n_epochs: int = 20, sot=None):
         super().__init__()
         self.way_dict = dict(train=args['train_way'], val=args['val_way'])
@@ -120,8 +112,8 @@ class PT_MAP(nn.Module):
         self.lam = lam
         self.alpha = alpha
         self.n_epochs = n_epochs
-        self.SOT = sot  # if sot is None, regular pt-map will be used (without applying sot)
         self.num_labeled = None
+        self.SOT = sot  # if sot is None no sot will be applied
 
     def scale(self, X: torch.Tensor, mode: str):
         # normalize, center and normalize again
@@ -147,12 +139,11 @@ class PT_MAP(nn.Module):
             Z = self.SOT(X=Z, n_samples=self.num_shot + self.num_query, y_support=labels[:self.num_labeled])
 
         # MAP
-        gaussian_model = GaussianModel(num_way=num_way, num_shot=self.num_shot, num_query=self.num_query,
-                                       lam=self.lam, SOT=self.SOT)
+        gaussian_model = GaussianModel(num_way=num_way, num_shot=self.num_shot, num_query=self.num_query, lam=self.lam)
         gaussian_model.init_from_labelled(X=Z)
 
         optim = MAP(labels=labels, alpha=self.alpha, num_labeled=self.num_labeled)
         P = optim.loop(X=Z, model=gaussian_model, n_epochs=self.n_epochs)
         accuracy, std = optim.get_accuracy(probas=P)
 
-        return torch.log(P + 1e-5), accuracy, std
+        return torch.log(P[self.num_labeled:] + 1e-5), accuracy

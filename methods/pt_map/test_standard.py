@@ -2,14 +2,12 @@ import argparse
 import torch
 import math
 from tqdm import tqdm
-from . import FSLTask
+import FSLTask
 import sys
-
 sys.path.append('/root/Daniel/SOT/')
+from utils import bool_flag
 from self_optimal_transport import SOT
-
-use_gpu = torch.cuda.is_available()
-softmax = torch.nn.Softmax(dim=1)
+import torch.nn.functional as F
 
 
 def centerDatas(datas):
@@ -19,7 +17,7 @@ def centerDatas(datas):
 
 
 def scaleEachUnitaryDatas(datas):
-    norms = datas.norm(dim=2, keepdim=True)
+    norms = datas.norm(dim=-1, keepdim=True)
     return datas / norms
 
 
@@ -36,11 +34,11 @@ class Model:
 
 # ---------  GaussianModel
 class GaussianModel(Model):
-    def __init__(self, n_ways, lam):
+    def __init__(self, n_ways, lam, distance_metric: str = 'euclidean'):
         super(GaussianModel, self).__init__(n_ways)
         self.mus = None  # shape [n_runs][n_ways][n_nfeat]
         self.lam = lam
-        self.v = None
+        self.distance_metric = distance_metric
 
     def clone(self):
         other = GaussianModel(self.n_ways)
@@ -81,33 +79,20 @@ class GaussianModel(Model):
     def _pairwise_dist(a, b):
         return (a.unsqueeze(2) - b.unsqueeze(1)).norm(dim=3).pow(2)
 
-    def _batch_dist(self, a, b, _dist_batch_size):
-        num_a = a.size(1)
-        num_b = b.size(1)
-        _s = _dist_batch_size
-
-        to_stack = list()
-        for i_a in range(0, num_a, _s):
-            a_slice = slice(i_a, min(i_a + _s, num_a))
-            cur_row = list()
-            for i_b in range(0, num_b, _s):
-                b_slice = slice(i_b, min(i_b + _s, num_b))
-                row_dist = self._pairwise_dist(a[:, a_slice, ...], b[:, b_slice, ...], )
-                cur_row.append(row_dist)
-            to_stack.append(torch.cat(cur_row, dim=2))
-
-        return torch.cat(to_stack, dim=1)
-
     def getProbas(self):
         global ndatas, n_nfeat
         # compute squared dist to centroids [n_runs][n_samples][n_ways]
-        dist = self._pairwise_dist(ndatas, self.mus)
-        # dist = self._batch_dist(ndatas, self.mus, 5)
+        if self.distance_metric == 'cosine':
+            dist = 1-torch.bmm(F.normalize(ndatas), F.normalize(self.mus.transpose(1, 2)))
+        elif self.distance_metric == 'ce':
+            dist = -torch.bmm(torch.log(ndatas + 1e-5), self.mus.transpose(1, 2))
+        else:
+            dist = self._pairwise_dist(ndatas, self.mus)
+
         p_xj = torch.zeros_like(dist)
         r = torch.ones(n_runs, n_usamples, device='cuda')
         c = torch.ones(n_runs, n_ways, device='cuda') * n_queries
-        # sinkhorn = SinkhornDistance(eps=0.1, max_iter=200)
-        p_xj_test = self.compute_optimal_transport(dist[:, n_lsamples:], r, c, epsilon=1e-6)
+        p_xj_test = self.compute_optimal_transport(dist[:, n_lsamples:], r, c, epsilon=1e-4)
         p_xj[:, n_lsamples:] = p_xj_test
 
         p_xj[:, :n_lsamples].fill_(0)
@@ -125,9 +110,9 @@ class GaussianModel(Model):
 # =========================================
 
 class MAP:
-    def __init__(self, alpha=None):
-        self.verbose = False
-        self.progressBar = False
+    def __init__(self, alpha=None, verbose: bool = False, progressBar: bool = False):
+        self.verbose = verbose
+        self.progressBar = progressBar
         self.alpha = alpha
 
     def getAccuracy(self, probas):
@@ -144,11 +129,7 @@ class MAP:
         p_xj = model.getProbas()
         self.probas = p_xj
 
-        if self.verbose:
-            print("accuracy from filtered probas", self.getAccuracy(self.probas))
-
         m_estimates = model.estimateFromMask(self.probas)
-
         # update centroids
         model.updateFromEstimate(m_estimates, self.alpha)
 
@@ -158,7 +139,6 @@ class MAP:
             print("output model accuracy", acc)
 
     def loop(self, model, n_epochs=20):
-
         self.probas = model.getProbas()
         if self.verbose:
             print("initialisation model accuracy", self.getAccuracy(self.probas))
@@ -170,8 +150,6 @@ class MAP:
                 pb = self.progressBar
 
         for epoch in range(1, n_epochs + 1):
-            if self.verbose:
-                print("----- epoch[{:3d}]  lr_p: {:0.3f}  lr_m: {:0.3f}".format(epoch, self.alpha))
             self.performEpoch(model, epochInfo=(epoch, n_epochs))
             if self.progressBar: pb.update()
 
@@ -185,18 +163,23 @@ def get_args():
     """ Description: Parses arguments at command line. """
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', type=str, default='C:/Users/dani3/Documents/GitHub/SOT/')
-    parser.add_argument('--path', type=str,
-                        default='C:/Users/dani3/Documents/GitHub/SOT/checkpoints/wrn/miniImagenet/WideResNet28_10_S2M2_R/last/output.plk')
+    parser.add_argument('--features_path', type=str,
+                        default='/checkpoints/wrn/miniImagenet/WideResNet28_10_S2M2_R/last/output.plk')
     parser.add_argument('--dataset', type=str, default='miniimagenet', choices=['miniimagenet'])
     parser.add_argument('--num_way', type=int, default=5)
     parser.add_argument('--num_shot', type=int, default=5)
     parser.add_argument('--num_query', type=int, default=15)
     parser.add_argument('--num_runs', type=int, default=10000)
+    parser.add_argument('--num_repeat', type=int, default=1,
+                        help='repeat the evaluation n times for averaging purposes.')
+    parser.add_argument('--verbose', type=bool_flag, default=False)
 
     # SOT args
     parser.add_argument('--ot_reg', type=float, default=0.1)
-    parser.add_argument('--sinkhorn_iterations', type=int, default=10)
+    parser.add_argument('--sink_iters', type=int, default=10)
     parser.add_argument('--distance_metric', type=str, default='cosine')
+    parser.add_argument('--norm_type', type=str, default='sinkhorn')
+    parser.add_argument('--mask_diag', type=bool_flag, default=True)
     return parser.parse_args()
 
 
@@ -212,46 +195,46 @@ if __name__ == '__main__':
     n_samples = n_lsamples + n_usamples
 
     cfg = {'shot': n_shot, 'ways': n_ways, 'queries': n_queries}
-    FSLTask.loadDataSet(args.dataset, root=args.root, path=args.path)
+    FSLTask.loadDataSet(args.dataset, root=args.root, features_path=args.root + args.features_path)
     FSLTask.setRandomStates(cfg)
     ndatas = FSLTask.GenerateRunSet(cfg=cfg, end=n_runs)
     ndatas = ndatas.permute(0, 2, 1, 3).reshape(n_runs, n_samples, -1)
-
     labels = torch.arange(n_ways).view(1, 1, n_ways).expand(n_runs, n_shot + n_queries, n_ways).clone().view(n_runs,
                                                                                                              n_samples)
+    labels = labels.cuda()
+    ndatas = ndatas.cuda()
 
-    sot = SOT(distance_metric=args.distance_metric, ot_reg=args.ot_reg, sinkhorn_iterations=args.sinkhorn_iterations, )
-
-    # Power transform
+    # Power transform + QR + Normalize
     ndatas[:, ] = torch.pow(ndatas[:, ] + 1e-6, 0.5)
     ndatas = QRreduction(ndatas)
     ndatas = scaleEachUnitaryDatas(ndatas)
-
     # trans-mean-sub
     ndatas = centerDatas(ndatas)
-    ndatas = scaleEachUnitaryDatas(ndatas)
-
-    # switch to cuda
-    ndatas = ndatas.cuda()
-    labels = labels.cuda()
-
+    _ndatas = scaleEachUnitaryDatas(ndatas)
     # # transform data
-    ndatas = sot(ndatas, n_samples=n_shot + n_queries, y_support=labels[0, :n_lsamples], max_temperature=True)
+    sot = SOT(distance_metric=args.distance_metric, ot_reg=args.ot_reg, sinkhorn_iterations=args.sink_iters,
+              norm_type=args.norm_type, mask_diag=args.mask_diag)
 
-    n_nfeat = ndatas.size(2)
-    print("size of the datas...", ndatas.size())
+    for dm in ['euclidean']:
+        print(f"DM {dm}")
+        for mask_diag in [False, True]:
+            sot.mask_diag = mask_diag
+            print(f"sot mask_diag {sot.mask_diag }")
+            # for max_temp in [False, True]:
+            #     print(f"sot max_temp {max_temp}")
+            for reg in [0.1, 0.2, 0.3, 0.4, 0.5]:
+                sot.ot_reg = reg
+                print(f"sot lambda {sot.ot_reg}")
 
-    # MAP
-    lam = 10
-    model = GaussianModel(n_ways, lam)
-    model.initFromLabelledDatas()
+                ndatas = sot(_ndatas, max_temperature=True)
+                n_nfeat = ndatas.size(2)
+                print("size of the datas...", ndatas.size())
 
-    alpha = 0.2
-    optim = MAP(alpha)
+                # MAP
+                model = GaussianModel(n_ways=n_ways, lam=10, distance_metric=dm)
+                model.initFromLabelledDatas()
 
-    optim.verbose = False
-    optim.progressBar = True
+                optim = MAP(alpha=0.2, verbose=args.verbose)
+                acc_test = optim.loop(model, n_epochs=20)
 
-    acc_test = optim.loop(model, n_epochs=20)
-
-    print("final accuracy found {:0.2f} +- {:0.2f}".format(*(100 * x for x in acc_test)))
+                print("final accuracy found {:0.2f} +- {:0.2f}".format(*(100 * x for x in acc_test)))

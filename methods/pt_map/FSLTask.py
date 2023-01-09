@@ -40,22 +40,20 @@ labels = None
 dsName = None
 
 
-def loadDataSet(dsname, root: str = None, path: str = None):
-    if dsname not in data_features_path:
-        raise NameError('Unknwown dataset: {}'.format(dsname))
-
+def loadDataSet(dsname, root: str = None, features_path: str = None):
     global dsName, data, labels, _randStates, _rsCfg, _min_examples, _cacheDir
     dsName = dsname
     _randStates = None
     _rsCfg = None
-    _cacheDir = root + '/methods/PT_MAP/evaluation/cache'
+    _cacheDir = root + '/methods/pt_map/cache'
 
     # Loading data from files on computer
-    # home = expanduser("~")
-    if path is None or path == '':
-        path = data_features_path[dsname]
+    if features_path is None or features_path == '':
+        if dsname not in data_features_path:
+            raise NameError('Unknwown dataset: {}'.format(dsname))
+        features_path = data_features_path[dsname]
 
-    dataset = _load_pickle(path)
+    dataset = _load_pickle(features_path)
 
     # Computing the number of items per class in the dataset
     _min_examples = dataset["labels"].shape[0]
@@ -126,31 +124,8 @@ def GenerateRunSet(start=None, end=None, cfg=None):
     setRandomStates(cfg)
     print("generating task from {} to {}".format(start, end))
 
-    dataset = torch.zeros((end - start, cfg['ways'], cfg['shot'] + cfg['queries'], data.shape[2]))
+    dataset = []
     for iRun in range(end - start):
-        dataset[iRun] = GenerateRun(start + iRun, cfg)
+        dataset.append(GenerateRun(start + iRun, cfg))
 
-    return dataset
-
-
-# define a main code to test this module
-def main():
-    print("Testing Task loader for Few Shot Learning")
-    loadDataSet('miniimagenet')
-
-    cfg = {"shot": 1, "ways": 5, "queries": 15}
-    setRandomStates(cfg)
-
-    run10 = GenerateRun(10, cfg)
-    print("First call:", run10[:2, :2, :2])
-
-    run10 = GenerateRun(10, cfg)
-    print("Second call:", run10[:2, :2, :2])
-
-    ds = GenerateRunSet(start=2, end=12, cfg=cfg)
-    print("Third call:", ds[8, :2, :2, :2])
-    print(ds.size())
-
-
-if __name__ == "__main__":
-    main()
+    return torch.stack(dataset)

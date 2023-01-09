@@ -7,7 +7,7 @@ import numpy as np
 
 class MiniImageNet(Dataset):
 
-    def __init__(self, data_path, setname, backbone, augment):
+    def __init__(self, data_path: str, setname: str, backbone: str, augment: bool):
         csv_path = osp.join(data_path, setname + '.csv')
         lines = [x.strip() for x in open(csv_path, 'r').readlines()][1:]
 
@@ -16,18 +16,12 @@ class MiniImageNet(Dataset):
         lb = -1
 
         self.wnids = []
-
         for l in lines:
             name, wnid = l.split(',')
+            path = osp.join(data_path, 'images', name)
             if wnid not in self.wnids:
                 self.wnids.append(wnid)
                 lb += 1
-
-            if setname == 'd':
-                path = osp.join(data_path, 'test', str(lb), name)
-            else:
-                path = osp.join(data_path, 'images', name)
-
             data.append(path)
             label.append(lb)
 
@@ -56,13 +50,13 @@ class MiniImageNet(Dataset):
                     transforms.Normalize(np.array([0.485, 0.456, 0.406]),
                                          np.array([0.229, 0.224, 0.225]))
                 ])
-        elif backbone == 'Res12':
+        elif backbone == 'resnet12':
             self.transform = transforms.Compose(
                 transforms_list + [
                     transforms.Normalize(np.array([x / 255.0 for x in [120.39586422, 115.59361427, 104.54012653]]),
                                          np.array([x / 255.0 for x in [70.68188272, 68.27635443, 72.54505529]]))
                 ])
-        elif backbone == 'Res18' or 'WRN' in backbone:
+        elif backbone == 'resnet18' or 'WRN' in backbone:
             self.transform = transforms.Compose(
                 transforms_list + [
                     transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -76,6 +70,5 @@ class MiniImageNet(Dataset):
 
     def __getitem__(self, i):
         path, label = self.data[i], self.label[i]
-        image = Image.open(path).convert('RGB')
-        orig = self.transform(image)
+        orig = self.transform(Image.open(path).convert('RGB'))
         return orig, label

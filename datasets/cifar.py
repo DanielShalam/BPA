@@ -7,8 +7,8 @@ from torchvision import transforms
 
 class CIFAR(Dataset):
 
-    def __init__(self, setname):
-        d = osp.join('data', 'cifar', setname)
+    def __init__(self, data_path: str, setname: str, backbone: str, augment: bool):
+        d = osp.join(data_path, setname)
         dirs = [os.path.join(d, o) for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
 
         data = []
@@ -25,14 +25,28 @@ class CIFAR(Dataset):
 
         self.data = data
         self.label = label
-        mean = [0.5071, 0.4867, 0.4408]
-        std = [0.2675, 0.2565, 0.2761]
 
-        self.transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(mean=mean,
-                                 std=std)
-        ])
+        mean = [x / 255.0 for x in [129.37731888, 124.10583864, 112.47758569]]
+        std = [x / 255.0 for x in [68.20947949, 65.43124043, 70.45866994]]
+        normalize = transforms.Normalize(mean=mean, std=std)
+
+        image_size = 32
+        if augment and setname == 'train':
+            transforms_list = [
+                transforms.RandomResizedCrop(image_size),
+                transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+            ]
+        else:
+            transforms_list = [
+                transforms.Resize((image_size, image_size)),
+                transforms.ToTensor(),
+            ]
+
+        self.transform = transforms.Compose(
+            transforms_list + [normalize]
+        )
 
     def __len__(self):
         return len(self.data)
@@ -42,3 +56,25 @@ class CIFAR(Dataset):
         image = self.transform(Image.open(path).convert('RGB'))
         return image, label, path
 
+
+def get_transform(img_size: int, split_name: str):
+    mean = [x / 255.0 for x in [129.37731888, 124.10583864, 112.47758569]]
+    std = [x / 255.0 for x in [68.20947949, 65.43124043, 70.45866994]]
+    normalize = transforms.Normalize(mean=mean, std=std)
+
+    if split_name == 'train':
+        return transforms.Compose([
+            # transforms.RandomResizedCrop((img_size, img_size), scale=(0.05, 1.0)),
+            transforms.RandomCrop(32, padding=4),
+            transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize
+        ])
+
+    else:
+        return transforms.Compose([
+            transforms.Resize((img_size, img_size)),
+            transforms.ToTensor(),
+            normalize
+        ])
