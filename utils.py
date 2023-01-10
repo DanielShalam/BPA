@@ -124,7 +124,12 @@ def log_step(results: dict, logger: wandb):
     """
     if logger is not None:
         logger.log(results)
-    print(results)
+
+    for key, value in results.items():
+        if 'acc' in key:
+            print(f"{key}: {100 * value:.2f}%")
+        else:
+            print(f"{key}: {value:.4f}")
 
 
 def get_output_dir(args: argparse):
@@ -178,7 +183,6 @@ def load_weights(model: torch.nn.Module, path: str):
     Load pretrained weights from given path.
     """
     if path is None or path == '':
-        print(f"Can't find model in {path}, resuming without loading ")
         return model
 
     print(f'Loading weights from {path}')
@@ -202,28 +206,22 @@ def load_weights(model: torch.nn.Module, path: str):
 
             del state_dict[k]
 
-        print(state_dict.keys())
         model.load_state_dict(state_dict, strict=True)
     else:
         model.load_state_dict(state_dict)
 
-    print("Weights loaded")
+    print("Weights loaded successfully ")
     return model
 
 
-def get_fs_labels(num_way: int, num_shot: int, num_query: int, method: str, to_cuda=True):
+def get_fs_labels(method: str, num_way: int, num_query: int, num_shot: int):
     """
-    Prepare few-shot labels. For example for 5-way, 1-shot, 2-query: [0, 1, 2, 3, 4, 0, 0, 1, 1, ...]
+    Prepare few-shot labels. For example for 5-way, 1-shot, 2-query: [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, ...]
     """
-    if 'pt_map' in method.lower():
-        labels = torch.arange(num_way, dtype=torch.int16).repeat(num_query).type(torch.LongTensor)
-    else:
-        labels = torch.arange(num_way, dtype=torch.int16).repeat(num_query).type(torch.LongTensor)
-        # support_label = torch.arange(num_way).reshape((num_way, 1)).expand((num_way, num_shot)).reshape(-1)
-        # query_label = torch.arange(num_way).reshape((num_way, 1)).expand((num_way, num_query)).reshape(-1)
-        # labels = torch.cat((support_label, query_label))
+    n_samples = num_shot + num_query if 'map' in method else num_query
+    labels = torch.arange(num_way, dtype=torch.int16).repeat(n_samples).type(torch.LongTensor)
 
-    if to_cuda:
+    if torch.cuda.is_available():
         return labels.cuda()
     else:
         return labels

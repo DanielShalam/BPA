@@ -6,7 +6,7 @@ import FSLTask
 import sys
 sys.path.append('/root/Daniel/SOT/')
 from utils import bool_flag
-from self_optimal_transport import SOT
+from self_optimal_transport.self_optimal_transport import SOT
 import torch.nn.functional as F
 
 

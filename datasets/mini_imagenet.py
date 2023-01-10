@@ -30,6 +30,7 @@ class MiniImageNet(Dataset):
 
         image_size = 84
         if augment:
+            # augment only if training and args.augment set to true
             transforms_list = [
                 transforms.RandomResizedCrop(image_size),
                 transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
