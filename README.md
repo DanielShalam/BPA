@@ -22,7 +22,7 @@ A particular min-cost-max-flow fractional matching problem, whose entropy regula
 
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-mini-3)](https://paperswithcode.com/sota/few-shot-image-classification-on-mini-3?p=the-self-optimal-transport-feature-transform)
 
-## Few-shot classification results
+## Few-Shot Classification Results
 
 | Dataset       | Method                 | 5-Way 1-Shot  | 5-Way 5-Shot  |
 | ------------- |-------------           | ------------- | ------------- |
@@ -37,49 +37,39 @@ A particular min-cost-max-flow fractional matching problem, whose entropy regula
 |            | PTMAP-SF-SOT           | 95.80         | 97.12         |
 
 ## Running instructions
-### Clustering on the sphere
-We provide the code to reproduce the synthetic experiment as described in the paper.
-This can be beneficial to experiment with the SOT on controlled data and can be used as a benchmark.
-    
-To run the experiment with the default arguments, simply run the script:
+We provide the code for training and evaluating PT-MAP and ProtoNet with and without SOT.
+Note that the results from the paper are not reproducible here. 
+To fully reproduce the results, use the SOT as shown here, in the original repositories.
 
-        synthetic_exp/eval_unit.py
-        
-The script includes a variety of parameters that control the structure of the data as well as additional plot configurations.
+### Training
+You can choose between ProtoNet/PT-MAP and their SOT variations.
 
-### Few-Shot Classification
+To train ProtoNet with SOT on miniimagenet, run:
 
-<details><summary>Dataset </summary>
-<p>
-    
-Work in progress...
-    
-</p>
-</details>
+```
+python train.py --data_path <./datasets/miniimagenet/> --backbone WRN --method proto_sot --ot_reg 0.1 --max_epochs 200 --train_way 5 --scheduler step --step_size 40 --lr 0.0002  --augment false
+```
 
-<details><summary>Running PT-MAP-SOT<sub>p</sub> </summary>
-<p>
+You can also fine-tune a network by specify:
+```
+--backbone <model name> --pretrained_path <./path>
+```
 
-Work in progress...
+We use wandb to log the training by adding:
+```
+--wandb true --project <project_name> --entity <wandb_entity>
+```
 
-</p>
-</details>
+### Evaluation
+Run the same you used for training with:
+```
+--eval --pretrained_path <./path>
+```
+You can choose the number of episodes by modify
+```
+--test_episodes
+```
 
-<details><summary>Running PT-MAP-SOT<sub>t</sub> </summary>
-<p>
-    
-Work in progress...
-
-</p>
-</details>
-
-<details><summary>Pretrained Models </summary>
-<p>
-
-All pretrained weights and features for the PT-MAP-SOT<sub>p</sub> expriment can be downloaded from the [PT-MAP repository](https://github.com/yhu01/PT-MAP)
-
-</p>
-</details>
 
 ## Citation
 
