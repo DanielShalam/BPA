@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from self_optimal_transport import SOT
+from self_optimal_transport.self_optimal_transport import SOT
 
 
 class ProtoLoss(nn.Module):
@@ -13,7 +13,8 @@ class ProtoLoss(nn.Module):
         self.SOT = sot  # if sot is None no sot will be applied
         self.num_labeled = None
 
-    def get_accuracy(self, probas: torch.Tensor, labels: torch.Tensor):
+    @staticmethod
+    def get_accuracy(probas: torch.Tensor, labels: torch.Tensor):
         y_hat = probas.argmin(dim=-1)
         matches = labels.eq(y_hat).float()
         m = matches.mean().item()
@@ -33,9 +34,9 @@ class ProtoLoss(nn.Module):
         X_c = X_s.reshape(self.num_shot, num_way, -1).transpose(0, 1).mean(dim=1)
 
         # compute distances between queries and the centroids
-        D = SOT.euclidean_metric(X_q, X_c) / self.temperature
+        D = torch.cdist(X_q, X_c) / self.temperature
 
-        return -D, self.get_accuracy(D, labels)
+        return -D, ProtoLoss.get_accuracy(D, labels)
 
 
 

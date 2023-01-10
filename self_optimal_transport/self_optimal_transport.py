@@ -1,5 +1,5 @@
 import torch
-import ot
+from self_optimal_transport import ot
 
 
 class SOT(object):
@@ -8,10 +8,12 @@ class SOT(object):
     def __init__(self, distance_metric: str = 'cosine', ot_reg: float = 0.1, sinkhorn_iterations: int = 10,
                  sigmoid: bool = False, mask_diag: bool = True, max_scale: bool = True):
         """
-        :param distance_metric - For Cost matrix calculation (currently optinal to [cosine, euclidean]).
-        :param ot_reg - The entropy regularization (lambda).
-        :param sinkhorn_iterations - Number of iteration for the sinkhorn algorithm.
-        :param sigmoid - If to apply sigmoid(log_p) instead of the usual exp(log_p). Usually helps.
+        :param distance_metric - Compute the cost matrix.
+        :param ot_reg - Sinkhorn entropy regularization (lambda). For few-shot classification, 0.1-0.2 works best.
+        :param sinkhorn_iterations - Maximum number of sinkhorn iterations.
+        :param sigmoid - If to apply sigmoid(log_p) instead of the usual exp(log_p).
+        :param mask_diag - Set to true to apply diagonal masking before and after the OT.
+        :param max_scale - Re-scale the SOT values to range [0,1].
         """
         super().__init__()
 

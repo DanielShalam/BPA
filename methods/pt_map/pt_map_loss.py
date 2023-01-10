@@ -2,6 +2,11 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+"""
+Implementation of PT-MAP as a differential module.
+Original code in https://github.com/yhu01/PT-MAP 
+"""
+
 
 def centerDatas(X: torch.Tensor, n_lsamples: int):
     """
@@ -77,20 +82,21 @@ class GaussianModel:
 
 class MAP:
     def __init__(self, labels, alpha: float, num_labeled: int, n_runs=1):
-        self.labels = labels
         self.alpha = alpha
         self.num_labeled = num_labeled
+        self.s_labels = labels[:self.num_labeled]
+        self.q_labels = labels[self.num_labeled:]
         self.n_runs = n_runs
 
     def get_accuracy(self, probas: torch.Tensor):
         y_hat = probas[self.num_labeled:].argmax(dim=-1)
-        matches = self.labels[self.num_labeled:].eq(y_hat).float()
+        matches = self.q_labels.eq(y_hat).float()
         m = matches.mean().item()
         pm = matches.std(unbiased=False).item() * 1.96
         return m, pm
 
     def perform_epoch(self, model: GaussianModel, X: torch.Tensor):
-        p_xj = model.get_probas(X=X, labels=self.labels)
+        p_xj = model.get_probas(X=X, labels=self.s_labels)
         m_estimates = model.estimate_from_mask(X=X, mask=p_xj)
         # update centroids
         model.update_from_estimate(m_estimates, self.alpha)
@@ -99,7 +105,7 @@ class MAP:
         for epoch in range(1, n_epochs + 1):
             self.perform_epoch(model=model, X=X)
         # get final accuracy and return it
-        P = model.get_probas(X=X, labels=self.labels)
+        P = model.get_probas(X=X, labels=self.s_labels)
         return P
 
 
@@ -117,13 +123,11 @@ class PTMAPLoss(nn.Module):
 
     def scale(self, X: torch.Tensor, mode: str):
         # normalize, center and normalize again
-        if mode != 't':
+        if mode != 'train':
             X = F.normalize(X, p=2, dim=-1)
             X = centerDatas(X, self.num_labeled)
 
-        if self.SOT.distance_metric[0] != 'c':
-            X = F.normalize(X, p=2, dim=-1)
-
+        X = F.normalize(X, p=2, dim=-1)
         return X
 
     def forward(self, X: torch.Tensor, labels: torch.Tensor, mode: str):
@@ -131,12 +135,14 @@ class PTMAPLoss(nn.Module):
         self.num_labeled = num_way * self.num_shot
 
         # power transform (PT part) and scaling
+        assert X.min() >= 0,\
+            print("Error: To use PT-MAP you need to apply another ReLU on the output features (as in WRN). ")
         X = torch.pow(X + 1e-6, 0.5)
         Z = self.scale(X=X, mode=mode)
 
         # applying SOT or continue with regular pt-map
         if self.SOT is not None:
-            Z = self.SOT(X=Z, n_samples=self.num_shot + self.num_query, y_support=labels[:self.num_labeled])
+            Z = self.SOT(X=Z)
 
         # MAP
         gaussian_model = GaussianModel(num_way=num_way, num_shot=self.num_shot, num_query=self.num_query, lam=self.lam)
