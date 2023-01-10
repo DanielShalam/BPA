@@ -50,26 +50,36 @@ To train ProtoNet with SOT on miniimagenet, run:
 python train.py --data_path <./datasets/miniimagenet/> --backbone WRN --method proto_sot --ot_reg 0.1 --max_epochs 200 --train_way 5 --scheduler step --step_size 40 --lr 0.0002  --augment false
 ```
 
-You can also fine-tune a network by specify:
+We also support logging results into the cloud using the Wandb logger (highly suggested).
+
+First, install it via:
 ```
---backbone <model name> --pretrained_path <./path>
+pip install wandb
 ```
 
-We use wandb to log the training by adding:
+Then, set the following arguments:
 ```
 --wandb true --project <project_name> --entity <wandb_entity>
+```
+
+### Fine-tuning
+For WRN-12, use checkpoints given by [Manifold Mixup repository](https://github.com/nupurkmr9/S2M2_fewshot).
+For Resnet-12, use the checkpoints as in [FEAT](https://github.com/Sha-Lab/FEAT).
+
+Dowload the weights according to the backbone you want and set:
+```
+--backbone <model name> --pretrained_path <./path>
 ```
 
 ### Evaluation
 Run the same you used for training with:
 ```
---eval --pretrained_path <./path>
+--eval true --pretrained_path <./path> --backbone <backbone_name>
 ```
 You can choose the number of episodes by modify
 ```
 --test_episodes
 ```
-
 
 ## Citation
 
