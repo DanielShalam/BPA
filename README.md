@@ -1,6 +1,6 @@
 # SOT: The Self-Optimal-Transport Feature Transform
 
-This repository provides the official PyTorch implementation and pretrained models for **SOT** (The **S**elf-**O**ptimal-**T**ransport), as described in the paper [The Self-Optimal-Transport Feature Transform](https://arxiv.org/abs/2204.03065).
+This repository provides the official PyTorch implementation for **SOT** (The **S**elf-**O**ptimal-**T**ransport), as described in the paper [The Self-Optimal-Transport Feature Transform](https://arxiv.org/abs/2204.03065).
 
 ![SOT](./sot_workflow.png?raw=true)
 
