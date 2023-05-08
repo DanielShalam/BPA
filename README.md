@@ -41,6 +41,8 @@ We provide the code for training and evaluating PT-MAP and ProtoNet with and wit
 Note that the results from the paper are not reproducible here. 
 To fully reproduce the results, use the SOT as shown here, in the original repositories.
 
+Find instructions on how to download the datasets under the datasets dir.
+
 ### Training
 You can choose between ProtoNet/PT-MAP and their SOT variations.
 
