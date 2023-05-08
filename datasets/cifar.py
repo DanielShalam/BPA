@@ -17,7 +17,6 @@ class CIFAR(Dataset):
 
         for d in dirs:
             lb += 1
-
             for image_name in os.listdir(d):
                 path = osp.join(d, image_name)
                 data.append(path)
@@ -30,17 +29,17 @@ class CIFAR(Dataset):
         std = [x / 255.0 for x in [68.20947949, 65.43124043, 70.45866994]]
         normalize = transforms.Normalize(mean=mean, std=std)
 
-        image_size = 32
+        self.image_size = 32
         if augment and setname == 'train':
             transforms_list = [
-                transforms.RandomResizedCrop(image_size),
+                transforms.RandomResizedCrop(self.image_size),
                 transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
             ]
         else:
             transforms_list = [
-                transforms.Resize((image_size, image_size)),
+                transforms.Resize((self.image_size, self.image_size)),
                 transforms.ToTensor(),
             ]
 

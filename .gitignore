@@ -131,3 +131,6 @@ dmypy.json
 secret/
 checkpoints/
 wandb/
+experiment_figs/
+commands.txt
+main_ablation.py

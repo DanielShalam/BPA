@@ -212,8 +212,9 @@ if __name__ == '__main__':
     ndatas = centerDatas(ndatas)
     _ndatas = scaleEachUnitaryDatas(ndatas)
     # # transform data
-    sot = SOT(distance_metric=args.distance_metric, ot_reg=args.ot_reg, sinkhorn_iterations=args.sink_iters,
-              norm_type=args.norm_type, mask_diag=args.mask_diag)
+    sot = SOT(
+        args.distance_metric, ot_reg=args.ot_reg, sinkhorn_iterations=args.sink_iters, mask_diag=args.mask_diag
+    )
 
     for dm in ['euclidean']:
         print(f"DM {dm}")
@@ -226,7 +227,7 @@ if __name__ == '__main__':
                 sot.ot_reg = reg
                 print(f"sot lambda {sot.ot_reg}")
 
-                ndatas = sot(_ndatas, max_temperature=True)
+                ndatas = sot(_ndatas)
                 n_nfeat = ndatas.size(2)
                 print("size of the datas...", ndatas.size())
 

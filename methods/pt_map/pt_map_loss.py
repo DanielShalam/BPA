@@ -135,8 +135,7 @@ class PTMAPLoss(nn.Module):
         self.num_labeled = num_way * self.num_shot
 
         # power transform (PT part) and scaling
-        assert X.min() >= 0,\
-            print("Error: To use PT-MAP you need to apply another ReLU on the output features (as in WRN). ")
+        assert X.min() >= 0, "Error: To use PT-MAP you need to apply another ReLU on the output features (or use WRN)."
         X = torch.pow(X + 1e-6, 0.5)
         Z = self.scale(X=X, mode=mode)
 

@@ -6,29 +6,33 @@ import numpy as np
 import torch
 from torch import optim
 from torch.utils.data import DataLoader
-from time import time
 from sklearn.metrics import confusion_matrix
 from scipy.optimize import linear_sum_assignment as linear_assignment
-from datasets.samplers import CategoriesSampler
+
 from models.wrn_mixup_model import wrn28_10
 from models.resnet12 import Res12
-from datasets.mini_imagenet import MiniImageNet
-from datasets.cifar import CIFAR
-from methods.pt_map.pt_map_loss import PTMAPLoss
-from methods.prototypical.proto_loss import ProtoLoss
+from datasets import MiniImageNet, CIFAR, CUB
+from datasets.samplers import CategoriesSampler
+from methods import PTMAPLoss, ProtoLoss
 from self_optimal_transport import SOT
+
 
 models = dict(wrn=wrn28_10, resnet12=Res12)
 datasets = dict(miniimagenet=MiniImageNet, cifar=CIFAR)
 methods = dict(pt_map=PTMAPLoss, pt_map_sot=PTMAPLoss, proto=ProtoLoss, proto_sot=ProtoLoss, )
 
 
-def get_model(model_name: str, dropout: float):
+def get_model(model_name: str, args):
     """
     Get the backbone model.
     """
-    if model_name.lower() in models.keys():
-        model = models[model_name.lower()](dropout=dropout)
+    arch = model_name.lower()
+    if arch in models.keys():
+        if 'vit' in arch:
+            model = models[arch](img_size=args.img_size, patch_size=16)
+        else:
+            model = models[arch](dropout=args.dropout)
+
         if torch.cuda.is_available():
             torch.backends.cudnn.benchmark = True
 
@@ -43,15 +47,20 @@ def get_dataloader(set_name: str, args: argparse, constant: bool = False):
     """
     num_episodes = args.set_episodes[set_name]
     num_way = args.train_way if set_name == 'train' else args.val_way
-    # define datasets and loaders
-    data_set = datasets[args.dataset.lower()](data_path=args.data_path, setname=set_name,
-                                              backbone=args.backbone, augment=set_name == 'train' and args.augment)
-    data_sampler = CategoriesSampler(set_name=set_name, labels=data_set.label, num_episodes=num_episodes,
-                                     num_way=num_way, num_shot=args.num_shot, num_query=args.num_query,
-                                     const_loader=constant)
-    data_loader = DataLoader(dataset=data_set, batch_sampler=data_sampler, num_workers=args.num_workers,
-                             pin_memory=not constant)
-    return data_loader
+
+    # define dataset sampler and data loader
+    data_set = datasets[args.dataset.lower()](
+        args.data_path, set_name, args.backbone, augment=set_name == 'train' and args.augment
+    )
+    args.img_size = data_set.image_size
+
+    data_sampler = CategoriesSampler(
+        set_name, data_set.label, num_episodes, const_loader=constant,
+        num_way=num_way, num_shot=args.num_shot, num_query=args.num_query
+    )
+    return DataLoader(
+        data_set, batch_sampler=data_sampler, num_workers=args.num_workers, pin_memory=not constant
+    )
 
 
 def get_optimizer(args: argparse, params):
@@ -155,38 +164,19 @@ def get_output_dir(args: argparse):
         for key, value in vars(args).items():
             f.write('%s:%s\n' % (key, value))
 
-    print(f'Model will be saved in {out_dir}')
+    print("Model checkpoints will be saved at:", out_dir)
     return out_dir
 
 
-def print_and_log(results: dict, n: int = 0, logger: wandb = None, epoch: int = None):
-    """
-    Print and log current results.
-    """
-    for key in results.keys():
-        # average by n if needed (n > 0)
-        if n > 0 and 'time' not in key:
-            results[key] = results[key] / n
-
-        # print and log
-        print(f'{key}: {results[key]:.4f}')
-
-    if logger is not None:
-        if epoch is not None:
-            logger.log(results, step=epoch)
-        else:
-            logger.log(results)
-
-
-def load_weights(model: torch.nn.Module, path: str):
+def load_weights(model: torch.nn.Module, pretrained_path: str):
     """
     Load pretrained weights from given path.
     """
-    if path is None or path == '':
+    if not pretrained_path:
         return model
 
-    print(f'Loading weights from {path}')
-    state_dict = torch.load(path)
+    print(f'Loading weights from {pretrained_path}')
+    state_dict = torch.load(pretrained_path)
     sd_keys = list(state_dict.keys())
     if 'state' in sd_keys:
         state_dict = state_dict['state']
@@ -198,7 +188,6 @@ def load_weights(model: torch.nn.Module, path: str):
         model.load_state_dict(state_dict, strict=False)
 
     elif 'params' in sd_keys:
-        print(state_dict['params'].keys())
         state_dict = state_dict['params']
         for k in list(state_dict.keys()):
             if k.startswith('encoder.'):
@@ -239,6 +228,22 @@ def bool_flag(s):
         return True
     else:
         raise argparse.ArgumentTypeError("invalid value for a boolean flag")
+
+
+def print_and_log(results: dict, n: int = 0, logger: wandb = None):
+    """
+    Print and log current results.
+    """
+    for key in results.keys():
+        # average by n if needed (n > 0)
+        if n > 0 and 'time' not in key and '/epoch' not in key:
+            results[key] = results[key] / n
+
+        # print and log
+        print(f'{key}: {results[key]:.4f}')
+
+    if logger is not None:
+        logger.log(results)
 
 
 def set_seed(seed: int):
@@ -284,3 +289,15 @@ def clustering_accuracy(true_row_labels, predicted_row_labels):
 def _make_cost_m(cm):
     s = np.max(cm)
     return - cm + s
+
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'

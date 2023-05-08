@@ -1,7 +1,7 @@
 import argparse
 from time import time
-
 import torch
+
 import utils
 from self_optimal_transport import SOT
 
@@ -14,7 +14,9 @@ def get_args():
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--dataset', type=str, default='miniimagenet', choices=['miniimagenet', 'cifar'])
     parser.add_argument('--data_path', type=str, default='./datasets/few_shot/miniimagenet')
-    parser.add_argument('--method', type=str, default='pt_map', choices=['pt_map', 'pt_map_sot', 'proto', 'proto_sot'])
+    parser.add_argument('--method', type=str, default='pt_map_sot',
+                        choices=['pt_map', 'pt_map_sot', 'proto', 'proto_sot'],
+                        help="Specify the few shot method to use. ")
     parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument('--eval', type=utils.bool_flag, default=False,
                         help=""" Set to true if you want to evaluate trained model on test set. """)
@@ -35,9 +37,9 @@ def get_args():
     parser.add_argument('--val_way', type=int, default=5, help=""" Number of classes in validation/testing batches. """)
     parser.add_argument('--num_shot', type=int, default=5, help=""" Support size. """)
     parser.add_argument('--num_query', type=int, default=15, help=""" Query size. """)
-    parser.add_argument('--train_episodes', type=int, default=100, help=""" Number of episodes in each epoch. """)
-    parser.add_argument('--eval_episodes', type=int, default=400, help=""" Number of episodes for evaluating. """)
-    parser.add_argument('--test_episodes', type=int, default=10000, help=""" Number of episodes for testing. """)
+    parser.add_argument('--train_episodes', type=int, default=200, help=""" Number of episodes for each epoch. """)
+    parser.add_argument('--eval_episodes', type=int, default=400, help=""" Number of tasks to evaluate. """)
+    parser.add_argument('--test_episodes', type=int, default=10000, help=""" Number of tasks to evaluate. """)
 
     # training args
     parser.add_argument('--max_epochs', type=int, default=25)
@@ -51,8 +53,8 @@ def get_args():
     parser.add_argument('--augment', type=utils.bool_flag, default=True, help=""" Apply data augmentation. """)
 
     # model args
-    parser.add_argument('--backbone', type=str, default='WRN', choices=['WRN', 'resnet12'])
-    parser.add_argument('--pretrained_path', type=str, default=None,
+    parser.add_argument('--backbone', type=str, default='WRN', choices=list(utils.models.keys()))
+    parser.add_argument('--pretrained_path', type=str, default=False,
                         help=""" Path to pretrained model. For testing/fine-tuning. """)
     parser.add_argument('--temperature', type=float, default=0.1, help=""" Temperature for ProtoNet. """)
     parser.add_argument('--dropout', type=float, default=0., help=""" Dropout probability. """)
@@ -88,9 +90,9 @@ def main():
         val_loader = utils.get_dataloader(set_name='test', args=args, constant=False)
 
     # define model and load pretrained weights if available
-    model = utils.get_model(model_name=args.backbone, dropout=args.dropout)
+    model = utils.get_model(args.backbone, args)
     model = model.cuda()
-    utils.load_weights(model=model, path=args.pretrained_path)
+    utils.load_weights(model, args.pretrained_path)
 
     # define optimizer and scheduler
     optimizer = utils.get_optimizer(args=args, params=model.parameters())
@@ -105,14 +107,12 @@ def main():
     method = utils.get_method(args=args, sot=sot)
 
     # few-shot labels
-    train_labels = utils.get_fs_labels(method=args.method, num_way=args.train_way, num_query=args.num_query,
-                                       num_shot=args.num_shot)
-    val_labels = utils.get_fs_labels(method=args.method, num_way=args.val_way, num_query=args.num_query,
-                                     num_shot=args.num_shot)
+    train_labels = utils.get_fs_labels(args.method, args.train_way, args.num_query, args.num_shot)
+    val_labels = utils.get_fs_labels(args.method, args.val_way, args.num_query, args.num_shot)
 
     # set logger and criterion
-    logger = utils.get_logger(exp_name=out_dir.split('/')[-1], args=args)
     criterion = utils.get_criterion_by_method(method=args.method)
+    logger = utils.get_logger(exp_name=out_dir.split('/')[-1], args=args)
 
     # only evaluate
     if args.eval:
@@ -138,7 +138,7 @@ def main():
 
         # eval
         if epoch % args.eval_freq == 0:
-            result = eval_one_epoch(model, val_loader, method, criterion, val_labels, logger, args.log_step, epoch)
+            result = eval_one_epoch(model, val_loader, method, criterion, val_labels, logger, epoch)
 
             # save best model
             if result['val/loss'] < best_loss:
@@ -153,56 +153,68 @@ def main():
 
 def train_one_epoch(model, loader, optimizer, method, criterion, labels, logger, log_step, epoch):
     model.train()
-    epoch_result = {'train/accuracy': 0, 'train/loss': 0}
+    results = {'train/accuracy': 0, 'train/loss': 0}
     start = time()
     for batch_idx, batch in enumerate(loader):
         images = batch[0].cuda()
-        # apply few_shot method to get logits
-        probas, accuracy = method(X=model(images), labels=labels, mode='train')
-        q_labels = labels if len(labels) == len(probas) else labels[-len(probas):]
-        loss = criterion(probas, q_labels)
-        epoch_result["train/loss"] += loss.item()
-        epoch_result["train/accuracy"] += accuracy
 
+        features = model(images)
+        # apply few_shot method
+        probas, accuracy = method(features, labels=labels, mode='train')
+        q_labels = labels if len(labels) == len(probas) else labels[-len(probas):]
+
+        loss = criterion(probas, q_labels)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        if log_step:
+
+        results["train/loss"] += loss.item()
+        results["train/accuracy"] += accuracy
+
+        if log_step and (batch_idx + 1) % 50 == 0:
+            step = batch_idx+((epoch-1) * len(loader))
             utils.log_step(
-                results={'train/loss_step': epoch_result["train/loss"] / (batch_idx + 1),
-                         'train/accuracy_step': epoch_result["train/accuracy"] / (batch_idx + 1)},
+                results={'train/loss_step': loss.item(), 'train/accuracy_step': accuracy, 'train/train_step': step},
                 logger=logger
             )
 
-    epoch_result["train/time"] = time() - start
-    utils.print_and_log(results=epoch_result, n=len(loader), logger=logger, epoch=epoch)
-    return epoch_result
+    results["train/time"] = time() - start
+    results["train/epoch"] = epoch
+    utils.print_and_log(results=results, n=len(loader), logger=logger)
+    return results
 
 
+@torch.no_grad()
 def eval_one_epoch(model, loader, method, criterion, labels, logger, epoch, set_name='val'):
     model.eval()
-    epoch_result = {f'{set_name}/accuracy': 0, f'{set_name}/loss': 0}
-    with torch.no_grad():
-        for batch_idx, batch in enumerate(loader):
-            images = batch[0].cuda()
+    results = {f'{set_name}/accuracy': 0, f'{set_name}/loss': 0}
 
-            # apply few_shot method to get logits
-            probas, accuracy = method(X=model(images), labels=labels, mode='val')
-            q_labels = labels if len(labels) == len(probas) else labels[-len(probas):]
-            loss = criterion(probas, q_labels)
-            epoch_result[f"{set_name}/loss"] += loss.item()
-            epoch_result[f"{set_name}/accuracy"] += accuracy
+    for batch_idx, batch in enumerate(loader):
+        images = batch[0].cuda()
 
-            if batch_idx % 50 == 0:
-                print(f"{batch_idx + 1} / {len(loader)}")
-                utils.log_step(
-                    results={f'{set_name}/loss_step': epoch_result[f'{set_name}/loss'] / (batch_idx + 1),
-                             f'{set_name}/accuracy_step': epoch_result[f'{set_name}/accuracy'] / (batch_idx + 1)},
-                    logger=logger
-                )
+        features = model(images)
 
-    utils.print_and_log(results=epoch_result, n=len(loader), logger=logger, epoch=epoch)
-    return epoch_result
+        # apply few_shot method
+        probas, accuracy = method(X=features, labels=labels, mode='val')
+        q_labels = labels if len(labels) == len(probas) else labels[-len(probas):]
+
+        loss = criterion(probas, q_labels)
+
+        results[f"{set_name}/loss"] += loss.item()
+        results[f"{set_name}/accuracy"] += accuracy
+
+        if batch_idx % 50 == 0:
+            step = batch_idx+((epoch-1) * len(loader))
+            print(f"Batch {batch_idx + 1}/{len(loader)}: ")
+            utils.log_step(
+                results={f'{set_name}/loss_step': loss.item(), f'{set_name}/accuracy_step': accuracy,
+                         f'{set_name}/{set_name}_step': step},
+                logger=logger
+            )
+
+    results["val/epoch"] = epoch
+    utils.print_and_log(results=results, n=len(loader), logger=logger)
+    return results
 
 
 if __name__ == '__main__':

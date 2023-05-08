@@ -17,18 +17,15 @@ IMAGE_PATH = osp.join(ROOT_PATH, 'images')
 class CUB(Dataset):
 
     def __init__(self, setname, args, augment=False):
-        im_size = args.orig_imsize
         txt_path = osp.join(ROOT_PATH, setname + '.csv')
-        lines = [x.strip() for x in open(txt_path, 'r').readlines()][1:]
 
         self.data, self.label = self.parse_csv(txt_path)
-
         self.num_class = np.unique(np.array(self.label)).shape[0]
-        image_size = 84
 
+        self.image_size = 84
         if augment and setname == 'train':
             transforms_list = [
-                transforms.RandomResizedCrop(image_size),
+                transforms.RandomResizedCrop(self.image_size),
                 transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
@@ -36,7 +33,7 @@ class CUB(Dataset):
         else:
             transforms_list = [
                 transforms.Resize(92),
-                transforms.CenterCrop(image_size),
+                transforms.CenterCrop(self.image_size),
                 transforms.ToTensor(),
             ]
 
