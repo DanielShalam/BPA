@@ -1,13 +1,10 @@
 import os
-import wandb
 import argparse
 import random
 import numpy as np
 import torch
 from torch import optim
 from torch.utils.data import DataLoader
-from sklearn.metrics import confusion_matrix
-from scipy.optimize import linear_sum_assignment as linear_assignment
 
 from models.wrn_mixup_model import wrn28_10
 from models.resnet12 import Res12
@@ -16,6 +13,11 @@ from datasets.samplers import CategoriesSampler
 from methods import PTMAPLoss, ProtoLoss
 from self_optimal_transport import SOT
 
+try:
+    import wandb
+    HAS_WANDB = True
+except:
+    HAS_WANDB = False
 
 models = dict(wrn=wrn28_10, resnet12=Res12)
 datasets = dict(miniimagenet=MiniImageNet, cifar=CIFAR)
@@ -116,6 +118,7 @@ def get_logger(exp_name: str, args: argparse):
     Initialize and returns wandb logger if args.wandb is True.
     """
     if args.wandb:
+        assert HAS_WANDB, "Install wandb via - 'pip install wandb' in order to use wandb logging. "
         logger = wandb.init(project=args.project, entity=args.entity, name=exp_name, config=vars(args))
         # define which metrics will be plotted against it
         logger.define_metric("train_loss", step_metric="epoch")
@@ -254,41 +257,6 @@ def set_seed(seed: int):
     np.random.seed(seed)
     torch.random.manual_seed(seed)
     torch.cuda.manual_seed(seed)
-
-
-def clustering_accuracy(true_row_labels, predicted_row_labels):
-    """
-    The :mod:`coclust.evaluation.external` module provides functions
-    to evaluate clustering or co-clustering results with external information
-    such as the true labeling of the clusters.
-    """
-
-    """Get the best accuracy.
-    Parameters
-    ----------
-    true_row_labels: array-like
-        The true row labels, given as external information
-    predicted_row_labels: array-like
-        The row labels predicted by the model
-    Returns
-    -------
-    float
-        Best value of accuracy
-    """
-
-    cm = confusion_matrix(true_row_labels, predicted_row_labels)
-    rows, cols = linear_assignment(_make_cost_m(cm))
-    total = 0
-    for row, column in zip(rows, cols):
-        value = cm[row][column]
-        total += value
-
-    return (total * 1. / np.sum(cm)), cols
-
-
-def _make_cost_m(cm):
-    s = np.max(cm)
-    return - cm + s
 
 
 class bcolors:
