@@ -7,7 +7,6 @@ from self_optimal_transport import SOT
 
 
 def get_args():
-    """ Description: Parses arguments at command line. """
     parser = argparse.ArgumentParser()
 
     # global args
@@ -53,7 +52,7 @@ def get_args():
     parser.add_argument('--augment', type=utils.bool_flag, default=True, help=""" Apply data augmentation. """)
 
     # model args
-    parser.add_argument('--backbone', type=str, default='WRN', choices=list(utils.models.keys()))
+    parser.add_argument('--backbone', type=str, default='WRN')
     parser.add_argument('--pretrained_path', type=str, default=False,
                         help=""" Path to pretrained model. For testing/fine-tuning. """)
     parser.add_argument('--temperature', type=float, default=0.1, help=""" Temperature for ProtoNet. """)
@@ -61,9 +60,12 @@ def get_args():
 
     # SOT args
     parser.add_argument('--ot_reg', type=float, default=0.1,
-                        help=""" Entropy regularization. For few-shot methods, 0.1-0.2 works best. """)
+                        help=""" Sinkhorn entropy regularization. 
+                                 For few-shot methods, 0.1-0.2 seems to work best. 
+                                 For larger tasks (~10,000) samples, try to increase this value. """)
     parser.add_argument('--sink_iters', type=int, default=20,
-                        help=""" Number of Sinkhorn iterations. """)
+                        help=""" Number of Sinkhorn iterations. 
+                                 Usually small number (~ 5-10) is sufficient. """)
     parser.add_argument('--distance_metric', type=str, default='cosine',
                         help=""" Build the cost matrix. """, choices=['cosine', 'euclidean'])
     parser.add_argument('--mask_diag', type=utils.bool_flag, default=True,

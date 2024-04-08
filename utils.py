@@ -19,6 +19,7 @@ try:
 except:
     HAS_WANDB = False
 
+
 models = dict(wrn=wrn28_10, resnet12=Res12)
 datasets = dict(miniimagenet=MiniImageNet, cifar=CIFAR)
 methods = dict(pt_map=PTMAPLoss, pt_map_sot=PTMAPLoss, proto=ProtoLoss, proto_sot=ProtoLoss, )
