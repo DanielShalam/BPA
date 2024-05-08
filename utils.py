@@ -150,26 +150,28 @@ def get_output_dir(args: argparse):
     Initialize the output dir.
     """
 
-    out_dir = f'./checkpoints/{args.backbone.lower()}/{args.dataset.lower()}/' \
-              f'way{args.train_way}_shot{args.num_shot}_mask_diag{args.mask_diag}' \
-              f'_lr{args.lr}_sched{args.scheduler}_step{args.step_size}_drop{args.dropout}'
+    checkpoint_dir = os.path.join(args.root_path, 'checkpoints', args.backbone.lower(), args.dataset.lower())
+
+    name_str = f'n_way={args.train_way}-n_shot={args.num_shot}' \
+               f'-lr={args.lr}-scheduler={args.scheduler}-dropout={args.dropout}'
+
+    checkpoint_dir = os.path.join(checkpoint_dir, name_str)
 
     if args.eval:
-        return out_dir
+        return checkpoint_dir
 
-    while os.path.exists(out_dir):
-        out_dir += f'_{np.random.randint(100)}'
+    # while os.path.exists(checkpoint_dir):
+    #     checkpoint_dir += f'-{np.random.randint(100)}'
 
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+    os.makedirs(checkpoint_dir, exist_ok=True)
 
     # write args to a file
-    with open(os.path.join(out_dir, "args.txt"), 'w') as f:
+    with open(os.path.join(checkpoint_dir, "args.txt"), 'w') as f:
         for key, value in vars(args).items():
             f.write('%s:%s\n' % (key, value))
 
-    print("Model checkpoints will be saved at:", out_dir)
-    return out_dir
+    print("Model checkpoints will be saved at:", checkpoint_dir)
+    return checkpoint_dir
 
 
 def load_weights(model: torch.nn.Module, pretrained_path: str):

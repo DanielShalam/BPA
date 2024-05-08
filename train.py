@@ -1,15 +1,19 @@
 import argparse
+import os
 from time import time
 import torch
 
-import utils
 from self_optimal_transport import SOT
+import utils
 
 
 def get_args():
     parser = argparse.ArgumentParser()
 
     # global args
+    parser.add_argument('--root_path', type=str, default='./',
+                        help=""" Path to project root directory. """)
+
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--dataset', type=str, default='miniimagenet', choices=['miniimagenet', 'cifar'])
     parser.add_argument('--data_path', type=str, default='./datasets/few_shot/miniimagenet')
@@ -145,12 +149,12 @@ def main():
             # save best model
             if result['val/loss'] < best_loss:
                 best_loss = result['val/loss']
-                torch.save(model.state_dict(), f'{out_dir}/{epoch}_min_loss.pth')
+                torch.save(model.state_dict(), os.path.join(out_dir, f'{epoch}_min_loss.pth'))
             elif result['val/accuracy'] > best_acc:
                 best_acc = result['val/accuracy']
-                torch.save(model.state_dict(), f'{out_dir}/{epoch}_max_acc.pth')
+                torch.save(model.state_dict(), os.path.join(out_dir, f'{epoch}_max_acc.pth'))
 
-        torch.save(model.state_dict(), f'{out_dir}/checkpoint_last.pth')
+        torch.save(model.state_dict(), os.path.join(out_dir, 'checkpoint_last.pth'))
 
 
 def train_one_epoch(model, loader, optimizer, method, criterion, labels, logger, log_step, epoch):
