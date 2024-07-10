@@ -1,7 +1,7 @@
 # BPA: The balanced-pairwise-affinities Feature Transform
 
 This repository provides the official PyTorch implementation for **BPA** (former SOT) (The **B**alanced-**P**airwise-**A**ffinities),
-as described in the paper [The Balanced-Pairwise-Affinities Feature Transform](https://arxiv.org/abs/2407.01467).
+as described in the paper [The Balanced-Pairwise-Affinities Feature Transform](https://arxiv.org/abs/2407.01467) (Accepted by ICML 2024).
 
 ![BPA](bpa_workflow.png?raw=true)
 
@@ -72,8 +72,9 @@ Then, set the following arguments:
 ```
 
 ### Fine-tuning
-For WRN-12, use checkpoints given by [Manifold Mixup repository](https://github.com/nupurkmr9/S2M2_fewshot).
-For Resnet-12, use the checkpoints as in [FEAT](https://github.com/Sha-Lab/FEAT).
+For WRN-12, download a pretrained checkpoint from [Manifold Mixup repository](https://github.com/nupurkmr9/S2M2_fewshot).
+
+For Resnet-12, we use the checkpoints as in [FEAT](https://github.com/Sha-Lab/FEAT).
 
 Dowload the weights according to the backbone you want and set:
 ```
