@@ -110,7 +110,7 @@ class MAP:
 
 
 class PTMAPLoss(nn.Module):
-    def __init__(self, args: dict, lam: float = 10, alpha: float = 0.2, n_epochs: int = 20, sot=None):
+    def __init__(self, args: dict, lam: float = 10, alpha: float = 0.2, n_epochs: int = 20, bpa=None):
         super().__init__()
         self.way_dict = dict(train=args['train_way'], val=args['val_way'])
         self.num_shot = args['num_shot']
@@ -119,7 +119,7 @@ class PTMAPLoss(nn.Module):
         self.alpha = alpha
         self.n_epochs = n_epochs
         self.num_labeled = None
-        self.SOT = sot  # if sot is None no sot will be applied
+        self.BPA = bpa
 
     def scale(self, X: torch.Tensor, mode: str):
         # normalize, center and normalize again
@@ -139,9 +139,9 @@ class PTMAPLoss(nn.Module):
         X = torch.pow(X + 1e-6, 0.5)
         Z = self.scale(X=X, mode=mode)
 
-        # applying SOT or continue with regular pt-map
-        if self.SOT is not None:
-            Z = self.SOT(X=Z)
+        # applying BPA transform
+        if self.BPA is not None:
+            Z = self.BPA(X=Z)
 
         # MAP
         gaussian_model = GaussianModel(num_way=num_way, num_shot=self.num_shot, num_query=self.num_query, lam=self.lam)

@@ -1,13 +1,28 @@
 import argparse
-import torch
 import math
+
 from tqdm import tqdm
-import FSLTask
 import sys
-sys.path.append('/root/Daniel/SOT/')
-from utils import bool_flag
-from self_optimal_transport.self_optimal_transport import SOT
+
+import torch
 import torch.nn.functional as F
+
+from methods.pt_map import FSLTask
+from bpa import BPA
+
+
+def bool_flag(s):
+    """
+    Parse boolean arguments from the command line.
+    """
+    FALSY_STRINGS = {"off", "false", "0"}
+    TRUTHY_STRINGS = {"on", "true", "1"}
+    if s.lower() in FALSY_STRINGS:
+        return False
+    elif s.lower() in TRUTHY_STRINGS:
+        return True
+    else:
+        raise argparse.ArgumentTypeError("invalid value for a boolean flag")
 
 
 def centerDatas(datas):
@@ -174,7 +189,7 @@ def get_args():
                         help='repeat the evaluation n times for averaging purposes.')
     parser.add_argument('--verbose', type=bool_flag, default=False)
 
-    # SOT args
+    # BPA args
     parser.add_argument('--ot_reg', type=float, default=0.1)
     parser.add_argument('--sink_iters', type=int, default=10)
     parser.add_argument('--distance_metric', type=str, default='cosine')
@@ -212,22 +227,25 @@ if __name__ == '__main__':
     ndatas = centerDatas(ndatas)
     _ndatas = scaleEachUnitaryDatas(ndatas)
     # # transform data
-    sot = SOT(
-        args.distance_metric, ot_reg=args.ot_reg, sinkhorn_iterations=args.sink_iters, mask_diag=args.mask_diag
+    bpa = BPA(
+        args.distance_metric,
+        ot_reg=args.ot_reg,
+        sinkhorn_iterations=args.sink_iters,
+        mask_diag=args.mask_diag,
     )
 
     for dm in ['euclidean']:
         print(f"DM {dm}")
         for mask_diag in [False, True]:
-            sot.mask_diag = mask_diag
-            print(f"sot mask_diag {sot.mask_diag }")
+            bpa.mask_diag = mask_diag
+            print(f"sot mask_diag {bpa.mask_diag }")
             # for max_temp in [False, True]:
             #     print(f"sot max_temp {max_temp}")
             for reg in [0.1, 0.2, 0.3, 0.4, 0.5]:
-                sot.ot_reg = reg
-                print(f"sot lambda {sot.ot_reg}")
+                bpa.ot_reg = reg
+                print(f"sot lambda {bpa.ot_reg}")
 
-                ndatas = sot(_ndatas)
+                ndatas = bpa(_ndatas)
                 n_nfeat = ndatas.size(2)
                 print("size of the datas...", ndatas.size())
 

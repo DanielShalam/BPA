@@ -5,7 +5,8 @@ import numpy as np
 class CategoriesSampler:
 
     def __init__(self, set_name, labels, num_episodes,
-                 num_way, num_shot, num_query, const_loader, replace=True):
+                 num_way, num_shot, num_query, const_loader,
+                 replace=True):
 
         self.set_name = set_name
         self.num_way = num_way

@@ -8,7 +8,7 @@ import torch.nn as nn
 from data.datamgr import SimpleDataManager
 from io_utils import parse_args
 import sys
-sys.path.append('/root/Daniel/SOT/')
+
 from models import wrn_mixup_model, res_mixup_model
 
 use_gpu = torch.cuda.is_available()

@@ -1,14 +1,21 @@
-# SOT: The Self-Optimal-Transport Feature Transform
+# BPA: The balanced-pairwise-affinities Feature Transform
 
-This repository provides the official PyTorch implementation for **SOT** (The **S**elf-**O**ptimal-**T**ransport), as described in the paper [The Self-Optimal-Transport Feature Transform](https://arxiv.org/abs/2204.03065).
+This repository provides the official PyTorch implementation for **BPA** (former SOT) (The **B**alanced-**P**airwise-**A**ffinities),
+as described in the paper [The Balanced-Pairwise-Affinities Feature Transform](https://arxiv.org/abs/2407.01467).
 
-![SOT](./sot_workflow.png?raw=true)
+![BPA](bpa_workflow.png?raw=true)
 
-The Self-Optimal-Transport (SOT) feature transform is designed to upgrade the set of features of a data instance to facilitate downstream matching or grouping related tasks. 
+The Balanced-Pairwise-Affinities (BPA) feature
+transform is designed to upgrade the features of a
+set of input items to facilitate downstream matching or grouping related tasks.
 
-The transformed set encodes a rich representation of high order relations between the instance features. Distances  between transformed features capture their **direct** original similarity and their **third party** 'agreement' regarding similarity to other features in the set. 
+The transformed set encodes a rich representation of high order relations between the instance features. 
+Distances between transformed features capture their **direct** original similarity, and 
+their **third party** 'agreement' regarding similarity to other features in the set. 
 
-A particular min-cost-max-flow fractional matching problem, whose entropy regularized version can be approximated by an optimal transport (OT) optimization, results in our transductive transform which is efficient, differentiable, equivariant, parameterless and probabilistically interpretable.
+A particular min-cost-max-flow fractional matching problem, 
+whose entropy regularized version can be approximated by an optimal transport (OT) optimization, results in our 
+transductive transform which is efficient, differentiable, equivariant, parameterless and probabilistically interpretable.
 
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-cifar-fs-5)](https://paperswithcode.com/sota/few-shot-image-classification-on-cifar-fs-5?p=the-self-optimal-transport-feature-transform)
 
@@ -26,30 +33,30 @@ A particular min-cost-max-flow fractional matching problem, whose entropy regula
 
 | Dataset       | Method                 | 5-Way 1-Shot  | 5-Way 5-Shot  |
 | ------------- |-------------           | ------------- | ------------- |
-| MiniImagenet  | PTMAP-SOT<sub>p</sub>  | 83.19         | 89.56         |
-|    | PTMAP-SOT<sub>t</sub>  | 84.18         | 90.51         |
-|    | PTMAP-SF-SOT           | 85.59         | 91.34         |
-|   |            |   |   |
-| CIFAR-FS      | PTMAP-SOT<sub>p</sub>  | 87.37         | 91.12         |
-|        | PTMAP-SF-SOT           | 89.94         | 92.83         |
-|   |            |   |   |
-| CUB           | PTMAP-SOT<sub>p</sub>  | 91.90         | 94.63         |
-|            | PTMAP-SF-SOT           | 95.80         | 97.12         |
+| MiniImagenet  | PTMAP-BPA<sub>p</sub>  | 83.19         | 89.56         |
+|               | PTMAP-BPA<sub>t</sub>  | 84.18         | 90.51         |
+|               | PTMAP-SF-BPA           | 85.59         | 91.34         |
+|               |                        |               |               |
+| CIFAR-FS      | PTMAP-BPA<sub>p</sub>  | 87.37         | 91.12         |
+|               | PTMAP-SF-BPA           | 89.94         | 92.83         |
+|               |                        |               |               |
+| CUB           | PTMAP-BPA<sub>p</sub>  | 91.90         | 94.63         |
+|               | PTMAP-SF-BPA           | 95.80         | 97.12         |
 
 ## Running instructions
-We provide the code for training and evaluating PT-MAP and ProtoNet with and without SOT.
+We provide the code for training and evaluating PT-MAP and ProtoNet with and without BPA.
 Note that the results from the paper are not reproducible here. 
-To fully reproduce the results, use the SOT as shown here, in the original repositories.
+To fully reproduce the results, use the BPA as shown here, in the original repositories.
 
 Find instructions on how to download the datasets under the datasets dir.
 
 ### Training
-You can choose between ProtoNet/PT-MAP and their SOT variations.
+For now, you can choose between ProtoNet/PT-MAP including their BPA variations.
 
-To train ProtoNet with SOT on miniimagenet, run:
+For example, to train our ProtoNet+BPA version on the MiniImagenet dataset using WideResnet as a backbone, run:
 
 ```
-python train.py --data_path <./datasets/miniimagenet/> --backbone WRN --method proto_sot --ot_reg 0.1 --max_epochs 200 --train_way 5 --scheduler step --step_size 40 --lr 0.0002  --augment false
+python train.py --data_path <yourdatasetpath/miniimagenet/> --backbone WRN --method proto_bpa --ot_reg 0.1 --max_epochs 200 --train_way 5 --scheduler step --step_size 40 --lr 0.0002  --augment false
 ```
 
 We also support logging results into the cloud using the Wandb logger (highly suggested).
