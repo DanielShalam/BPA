@@ -53,7 +53,7 @@ class CIFAR(Dataset):
     def __getitem__(self, i):
         path, label = self.data[i], self.label[i]
         image = self.transform(Image.open(path).convert('RGB'))
-        return image, label, path
+        return image, label
 
 
 def get_transform(img_size: int, split_name: str):
