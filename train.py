@@ -142,7 +142,6 @@ def main():
             sinkhorn_iterations=args.sink_iters,
             max_scale=args.max_scale
         )
-
     fewshot_method = utils.get_method(args=args, bpa=bpa)
 
     # few-shot labels
@@ -194,7 +193,7 @@ def main():
                 best_acc = eval_acc
                 torch.save(model.state_dict(), os.path.join(output_dir, 'max_acc.pth'))
 
-        # save final checkpoint
+        # save last checkpoint
         torch.save(model.state_dict(), os.path.join(output_dir, 'last.pth'))
 
 

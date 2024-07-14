@@ -135,20 +135,27 @@ class PTMAPLoss(nn.Module):
         self.num_labeled = num_way * self.num_shot
 
         # power transform (PT part) and scaling
-        assert X.min() >= 0, "Error: To use PT-MAP you need to apply another ReLU on the output features (or use WRN)."
+        assert X.min() >= 0, \
+            "Error: PT-MAP require positive features. You may add ReLU like activation or use switch to WRN backbone."
         X = torch.pow(X + 1e-6, 0.5)
-        Z = self.scale(X=X, mode=mode)
+        Z = self.scale(X, mode=mode)
 
         # applying BPA transform
         if self.BPA is not None:
-            Z = self.BPA(X=Z)
+            Z = self.BPA(Z)
 
         # MAP
-        gaussian_model = GaussianModel(num_way=num_way, num_shot=self.num_shot, num_query=self.num_query, lam=self.lam)
-        gaussian_model.init_from_labelled(X=Z)
+        gaussian_model = GaussianModel(
+            num_way=num_way,
+            num_shot=self.num_shot,
+            num_query=self.num_query,
+            lam=self.lam)
+        gaussian_model.init_from_labelled(Z)
 
         optim = MAP(labels=labels, alpha=self.alpha, num_labeled=self.num_labeled)
-        P = optim.loop(X=Z, model=gaussian_model, n_epochs=self.n_epochs)
-        accuracy, std = optim.get_accuracy(probas=P)
+        probs = optim.loop(
+            Z, model=gaussian_model, n_epochs=self.n_epochs
+        )
+        accuracy, std = optim.get_accuracy(probs)
 
-        return torch.log(P[self.num_labeled:] + 1e-5), accuracy
+        return torch.log(probs[self.num_labeled:] + 1e-5), accuracy
