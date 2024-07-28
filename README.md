@@ -96,14 +96,13 @@ You can choose the number of episodes by modify
 <p>
 
 #### If you find this repository useful in your research, please cite:
-
-    @article{shalam2022self,
-      title={The Self-Optimal-Transport Feature Transform},
+    @article{shalam2024balanced,
+      title={The Balanced-Pairwise-Affinities Feature Transform},
       author={Shalam, Daniel and Korman, Simon},
-      journal={arXiv preprint arXiv:2204.03065},
-      year={2022}
+      journal={arXiv preprint arXiv:2407.01467},
+      year={2024}
     }
-
+    
 </p>
 
 ## Acknowledgment
