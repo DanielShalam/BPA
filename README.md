@@ -1,4 +1,4 @@
-# BPA: The balanced-pairwise-affinities Feature Transform
+# BPA: The balanced-pairwise-affinities Feature Transform (ICML 2024)
 
 This repository provides the official PyTorch implementation for **BPA** (former SOT) (The **B**alanced-**P**airwise-**A**ffinities),
 as described in the paper [The Balanced-Pairwise-Affinities Feature Transform](https://arxiv.org/abs/2407.01467) (Accepted by ICML 2024).
