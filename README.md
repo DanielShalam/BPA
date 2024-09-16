@@ -40,6 +40,19 @@ their **third party** 'agreement' regarding similarity to other features in the 
 | CUB           | PTMAP-BPA<sub>p</sub>  | 91.90         | 94.63         |
 |               | PTMAP-SF-BPA           | 95.80         | 97.12         |
 
+## Using BPA in your own project with only 2 lines of code
+BPA flexibility allow to improve your set representation with only 2 additional lines of code!
+
+```
+import torch
+from bpa import BPA
+
+x = torch.randn(100, 128) # x is of shape [n_samples, dim]
+x = BPA()(x)
+# after BPA, x shape is [n_samples, n_samples]
+```
+
+
 ## Running instructions
 We provide the code for training and evaluating PT-MAP and ProtoNet with and without BPA.
 Note that the results from the paper are not reproducible here. 
