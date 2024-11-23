@@ -34,18 +34,20 @@ class BPA(nn.Module):
         self.sigmoid = sigmoid
         self.ot_reg = ot_reg
         self.max_scale = max_scale
-        self.diagonal_val = 1e3                         # value to mask self-values with
+        self.diagonal_val = 1e5                         # value to mask self-values with
 
     def compute_cost_matrix(self, x: Tensor) -> Tensor:
         """
         Compute the cost matrix.
         """
-        # euclidean
+        # Euclidean distances
         if self.distance_metric == 'euclidean':
+            # dim_offset = 0 if x.dim() <= 2 else 1
+            # pairwise_dist = (x.unsqueeze(1+dim_offset) - x.unsqueeze(0+dim_offset)).norm(dim=-1).pow(2)
             pairwise_dist = torch.cdist(x, x, p=2)
-            # scale euclidean distances to [0, 1]
-            pairwise_dist = pairwise_dist / pairwise_dist.max()
-        # cosine
+            pairwise_dist = pairwise_dist / pairwise_dist.max()  # scale distances to [0, 1]
+
+        # Cosine distances
         elif self.distance_metric == 'cosine':
             x_norm = F.normalize(x, dim=-1, p=2)
             pairwise_dist = 1 - (x_norm @ x_norm.transpose(-2, -1))

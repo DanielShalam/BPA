@@ -60,7 +60,8 @@ class GaussianModel:
         return P
 
     def get_probas(self, X: torch.Tensor, labels: torch.Tensor):
-        dist = torch.cdist(X, self.mus)
+        # compute squared dist to centroids [n_samples][n_ways]
+        dist = (X.unsqueeze(1)-self.mus.unsqueeze(0)).norm(dim=2).pow(2)
         p_xj = torch.zeros_like(dist)
         r = torch.ones(1, self.num_way * self.num_query, device='cuda')
         c = torch.ones(1, self.num_way, device='cuda') * self.num_query

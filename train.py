@@ -158,7 +158,8 @@ def main():
     # Test-set evaluation
     if args.eval:
         print(f"Evaluate model for {args.test_episodes} episodes... ")
-        eval_one_epoch(model, val_dataloader, fewshot_method, criterion, val_labels, 0, args, set_name='test')
+        loss, acc = eval_one_epoch(model, val_dataloader, fewshot_method, criterion, val_labels, 0, args, set_name='test')
+        print("Final evaluation results:\nAccuracy={:.4f}, Loss={:.4f}".format(acc, loss))
         exit(1)
 
     # define optimizer and scheduler

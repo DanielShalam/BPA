@@ -5,11 +5,14 @@ from bpa import BPA
 
 
 class ProtoLoss(nn.Module):
+    """
+    Prototypical loss function
+    """
     def __init__(self, args: dict, bpa: BPA = None):
         super().__init__()
-        self.way_dict = dict(train=args['train_way'], val=args['val_way'])
         self.num_shot = args['num_shot']
         self.num_query = args['num_query']
+        self.way_dict = dict(train=args['train_way'], val=args['val_way'])
         self.temperature = args['temperature']
         self.BPA = bpa
         self.num_labeled = None
@@ -30,14 +33,16 @@ class ProtoLoss(nn.Module):
         if self.BPA is not None:
             X = self.BPA(X)
 
-        X_s, X_q = X[:self.num_labeled], X[self.num_labeled:]
+        # split to support and queries
+        X_support, X_query = X.split((self.num_labeled, X.size(0)-self.num_labeled), dim=0)
 
         # compute centroids
-        # assuming input data is sorted as [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, ...]
-        X_c = X_s.reshape(self.num_shot, num_way, -1).transpose(0, 1).mean(dim=1)
+        # -> assuming input data sorted as [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, ...]
+        X_centroid = X_support.reshape(self.num_shot, num_way, -1).transpose(0, 1).mean(dim=1)
 
         # compute distances between queries and the centroids
-        D = torch.cdist(X_q, X_c) / self.temperature
+        D = (X_query.unsqueeze(1) - X_centroid.unsqueeze(0)).norm(dim=2).pow(2)
+        D = D / self.temperature
 
         return -D, ProtoLoss.get_accuracy(D, labels)
 
