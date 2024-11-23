@@ -67,7 +67,7 @@ def get_args():
                         help=""" Number of tasks to evaluate. """)
     parser.add_argument('--test_episodes', type=int, default=10000,
                         help=""" Number of tasks to evaluate. """)
-    parser.add_argument('--temperature', type=float, default=0.1,
+    parser.add_argument('--temperature', type=float, default=1.,
                         help=""" Temperature for ProtoNet. """)
 
     # training specific arguments
