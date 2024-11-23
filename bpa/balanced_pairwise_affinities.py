@@ -36,9 +36,36 @@ class BPA(nn.Module):
         self.max_scale = max_scale
         self.diagonal_val = 1e5                         # value to mask self-values with
 
+    def mask_diagonal(self, M: Tensor, value: float):
+        """
+        Fill the diagonal of a given matrix (or a batch of them) with given value
+        """
+        if self.mask_diag:
+            if M.dim() > 2:
+                M[torch.eye(M.shape[1]).repeat(M.shape[0], 1, 1).bool()] = value
+            else:
+                M.fill_diagonal_(value)
+        return M
+
+    def adjust_labeled(self, x: Tensor, y: Tensor):
+        """
+        Adjust BPA scores using additional labels (e.g. support set in few shot classification)
+        We do so by filling the final values of labeled pairs by 0 and 1, according to if they share the same class
+        """
+        labels_one_hot = F.one_hot(y).float()
+        mask = (labels_one_hot @ labels_one_hot.T).bool()   # mask[i,j] 1 if y[i] == y[j]
+
+        # pad mask with ones
+        pad_size = x.size(0) - mask.size(0)
+        pad = (0, pad_size, 0, pad_size)
+        # (padding_left, padding_right, padding_top, padding_bottom)
+        x.masked_fill_(F.pad(mask, pad, "constant", 0), value=1)  # mask known positives
+        x.masked_fill_(F.pad(~mask, pad, "constant", 0), value=0)   # mask known negatives
+        return x
+
     def compute_cost_matrix(self, x: Tensor) -> Tensor:
         """
-        Compute the cost matrix.
+        Compute the cost matrix under euclidean or cosine distances
         """
         # Euclidean distances
         if self.distance_metric == 'euclidean':
@@ -53,20 +80,9 @@ class BPA(nn.Module):
             pairwise_dist = 1 - (x_norm @ x_norm.transpose(-2, -1))
         return pairwise_dist
 
-    def mask_diagonal(self, M: Tensor, value: float):
+    def forward(self, x: Tensor, y: Tensor = None) -> Tensor:
         """
-        Mask diagonal with new value.
-        """
-        if self.mask_diag:
-            if M.dim() > 2:
-                M[torch.eye(M.shape[1]).repeat(M.shape[0], 1, 1).bool()] = value
-            else:
-                M.fill_diagonal_(value)
-        return M
-
-    def forward(self, x: Tensor) -> Tensor:
-        """
-        Compute the BPA feature transform.
+        Compute the BPA feature transform
         """
         # get masked cost matrix
         C = self.compute_cost_matrix(x)
@@ -84,13 +100,10 @@ class BPA(nn.Module):
             z_max = x_bpa.max().item() if x_bpa.dim() <= 2 else x_bpa.amax(dim=(1, 2), keepdim=True)
             x_bpa = x_bpa / z_max
 
+        # adjust labeled samples (e.g. support set) if given labels
+        if y is not None:
+            x_bpa = self.adjust_labeled(x_bpa, y)
+
         # set self-values to 1
         return self.mask_diagonal(x_bpa, value=1)
 
-
-def cosine_similarity(x: Tensor):
-    """
-    Compute the pairwise cosine similarity between a matrix to itself.
-    """
-    x_norm = F.normalize(x, dim=-1, p=2)
-    return x_norm @ x_norm.transpose(-2, -1)

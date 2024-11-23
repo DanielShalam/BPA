@@ -31,7 +31,7 @@ class ProtoLoss(nn.Module):
 
         # apply the BPA transform
         if self.BPA is not None:
-            X = self.BPA(X)
+            X = self.BPA(X, y=labels[:self.num_labeled])
 
         # split to support and queries
         X_support, X_query = X.split((self.num_labeled, X.size(0)-self.num_labeled), dim=0)

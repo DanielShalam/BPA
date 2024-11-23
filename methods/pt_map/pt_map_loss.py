@@ -127,7 +127,6 @@ class PTMAPLoss(nn.Module):
         if mode != 'train':
             X = F.normalize(X, p=2, dim=-1)
             X = centerDatas(X, self.num_labeled)
-
         X = F.normalize(X, p=2, dim=-1)
         return X
 
@@ -135,15 +134,16 @@ class PTMAPLoss(nn.Module):
         num_way = self.way_dict[mode]
         self.num_labeled = num_way * self.num_shot
 
-        # power transform (PT part) and scaling
         assert X.min() >= 0, \
-            "Error: PT-MAP require positive features. You may add ReLU like activation or use switch to WRN backbone."
+            "Error: PT-MAP require non-negative features. You may add ReLU like activation or use switch to WRN backbone."
+
+        # power-transform (the PT part) and scaling
         X = torch.pow(X + 1e-6, 0.5)
         Z = self.scale(X, mode=mode)
 
         # applying BPA transform
         if self.BPA is not None:
-            Z = self.BPA(Z)
+            Z = self.BPA(Z, y=labels[:self.num_labeled])
 
         # MAP
         gaussian_model = GaussianModel(
@@ -159,4 +159,4 @@ class PTMAPLoss(nn.Module):
         )
         accuracy, std = optim.get_accuracy(probs)
 
-        return torch.log(probs[self.num_labeled:] + 1e-5), accuracy
+        return torch.log(probs[self.num_labeled:] + 1e-6), accuracy
