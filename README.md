@@ -82,9 +82,9 @@ Then, set the following arguments:
 ```
 
 ### Fine-tuning
-For WRN-12, download a pretrained checkpoint from [Manifold Mixup repository](https://github.com/nupurkmr9/S2M2_fewshot).
+For WRN-28, we use the pretrained checkpoint from [Manifold Mixup repository](https://github.com/nupurkmr9/S2M2_fewshot).
 
-For Resnet-12, we use the checkpoints as in [FEAT](https://github.com/Sha-Lab/FEAT).
+For Resnet-12, we use the pretrained checkpoint from [FEAT](https://github.com/Sha-Lab/FEAT).
 
 Dowload the weights according to the backbone you want and set:
 ```
