@@ -1,105 +1,161 @@
 # BPA: The balanced-pairwise-affinities Feature Transform (ICML 2024)
 
-This repository provides the official PyTorch implementation for **BPA** (former SOT) (The **B**alanced-**P**airwise-**A**ffinities),
-as described in the paper [The Balanced-Pairwise-Affinities Feature Transform](https://arxiv.org/abs/2407.01467) (Accepted by ICML 2024).
+This repository contains the official PyTorch implementation of **BPA** (formerly SOT) — the **B**alanced-**P**airwise-**A**ffinities feature transform — as described in our paper [*The Balanced-Pairwise-Affinities Feature Transform*](https://arxiv.org/abs/2407.01467), presented at ICML 2024.
 
 ![BPA](bpa_workflow.png?raw=true)
 
-The Balanced-Pairwise-Affinities (BPA) feature
-transform is designed to upgrade the features of a
-set of input items to facilitate downstream matching or grouping related tasks.
+BPA enhances the representation of a set of input features to support downstream tasks such as matching or grouping.
 
-The transformed set encodes a rich representation of high order relations between the instance features. 
-Distances between transformed features capture their **direct** original similarity, and 
-their **third party** 'agreement' regarding similarity to other features in the set. 
+The transformed features capture both **direct** pairwise similarity and **third-party agreement** — how other instances in the set influence similarity between a given pair. This enables BPA to model higher-order relations effectively.
 
+---
 
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-cifar-fs-5)](https://paperswithcode.com/sota/few-shot-image-classification-on-cifar-fs-5?p=the-self-optimal-transport-feature-transform)
-
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-cifar-fs-5-1)](https://paperswithcode.com/sota/few-shot-image-classification-on-cifar-fs-5-1?p=the-self-optimal-transport-feature-transform)
-
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-cub-200-5-1)](https://paperswithcode.com/sota/few-shot-image-classification-on-cub-200-5-1?p=the-self-optimal-transport-feature-transform)
-
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-cub-200-5)](https://paperswithcode.com/sota/few-shot-image-classification-on-cub-200-5?p=the-self-optimal-transport-feature-transform)
-
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-mini-2)](https://paperswithcode.com/sota/few-shot-image-classification-on-mini-2?p=the-self-optimal-transport-feature-transform)
-
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/the-self-optimal-transport-feature-transform/few-shot-image-classification-on-mini-3)](https://paperswithcode.com/sota/few-shot-image-classification-on-mini-3?p=the-self-optimal-transport-feature-transform)
+
+---
 
 ## Few-Shot Classification Results
 
-| Dataset       | Method                 | 5-Way 1-Shot  | 5-Way 5-Shot  |
-| ------------- |-------------           | ------------- | ------------- |
-| MiniImagenet  | PTMAP-BPA<sub>p</sub>  | 83.19         | 89.56         |
-|               | PTMAP-BPA<sub>t</sub>  | 84.18         | 90.51         |
-|               | PTMAP-SF-BPA           | 85.59         | 91.34         |
-|               |                        |               |               |
-| CIFAR-FS      | PTMAP-BPA<sub>p</sub>  | 87.37         | 91.12         |
-|               | PTMAP-SF-BPA           | 89.94         | 92.83         |
-|               |                        |               |               |
-| CUB           | PTMAP-BPA<sub>p</sub>  | 91.90         | 94.63         |
-|               | PTMAP-SF-BPA           | 95.80         | 97.12         |
+| Dataset      | Method                 | 5-Way 1-Shot | 5-Way 5-Shot |
+|--------------|------------------------|--------------|--------------|
+| MiniImagenet | PTMAP-BPA<sub>p</sub>  | 83.19        | 89.56        |
+|              | PTMAP-BPA<sub>t</sub>  | 84.18        | 90.51        |
+|              | PTMAP-SF-BPA           | 85.59        | 91.34        |
+| CIFAR-FS     | PTMAP-BPA<sub>p</sub>  | 87.37        | 91.12        |
+|              | PTMAP-SF-BPA           | 89.94        | 92.83        |
+| CUB          | PTMAP-BPA<sub>p</sub>  | 91.90        | 94.63        |
+|              | PTMAP-SF-BPA           | 95.80        | 97.12        |
 
-## Using BPA in your own project with only 2 lines of code
-BPA flexibility allow to improve your set representation with only 2 additional lines of code!
+---
 
-```
+## Setup
+
+### Datasets
+Instructions for downloading and preparing the few-shot classification datasets are available in the `datasets` directory.
+
+### Pretrained Models
+Most results in the paper use fine-tuned models:
+
+- **WideResNet-28**: [PT-MAP checkpoint](https://drive.google.com/file/d/1wVJlDnU00Gurs0pw54ZMqf4XsWhJWHIh/view)
+- **ResNet-12**: [FEAT checkpoint](https://github.com/Sha-Lab/FEAT)
+
+### BPA Checkpoint
+We provide a checkpoint for [PTMAP-BPA<sub>t</sub>](https://drive.google.com/file/d/1wjh_EBQPYYHFjqoqlKCitcG9mjgkWFRw/view?usp=sharing), which yields:
+
+- **84.69%** accuracy for 5-way 1-shot (vs. 84.18% in the paper)  
+- **90.30%** accuracy for 5-way 5-shot (vs. 90.51% in the paper)
+
+---
+
+## Usage
+
+### Quick Start
+
+BPA can be applied in just two lines of code:
+
+```python
 import torch
 from bpa import BPA
 
-x = torch.randn(100, 128) # x is of shape [n_samples, dim]
-x = BPA()(x)
-# after BPA, x shape is [n_samples, n_samples]
+x = torch.randn(100, 128)  # [n_samples, dim]
+x = BPA()(x)               # Output shape: [n_samples, n_samples]
 ```
 
+---
 
-## Running instructions
-We provide the code for training and evaluating PT-MAP and ProtoNet with and without BPA.
-Note that the results from the paper are not reproducible here. 
-To fully reproduce the results, use the BPA as shown here, in the original repositories.
+### Training PT-MAP-BPA<sub>t</sub> on MiniImagenet
 
-Find instructions on how to download the datasets under the datasets dir.
+1. [Download](https://drive.google.com/file/d/1wVJlDnU00Gurs0pw54ZMqf4XsWhJWHIh/view) the pretrained WRN feature extractor.
+2. Create an empty `checkpoints` directory.
+3. Extract the downloaded file into the `checkpoints` folder.
 
-### Training
-For now, you can choose between ProtoNet/PT-MAP including their BPA variations.
+Run the following command to train BPA with PT-MAP:
 
-For example, to train our ProtoNet+BPA version on the MiniImagenet dataset using WideResnet as a backbone, run:
-
+```bash
+python train.py \
+  --sink_iters 5 \
+  --distance_metric cosine \
+  --ot_reg 0.2 \
+  --method pt_map_bpa \
+  --backbone wrn \
+  --augment false \
+  --lr 5e-5 \
+  --weight_decay 0. \
+  --max_epochs 50 \
+  --train_way 10 \
+  --val_way 5 \
+  --num_shot 5 \
+  --num_query 15 \
+  --train_episodes 200 \
+  --eval_episodes 400 \
+  --checkpoint_dir ./checkpoints/pt_map_bpa \
+  --data_path <your_dataset_path/miniimagenet/> \
+  --pretrained_path ./checkpoints/miniImagenet/WideResNet28_10_S2M2_R/470.tar
 ```
-python train.py --data_path <yourdatasetpath/miniimagenet/> --backbone WRN --method proto_bpa --ot_reg 0.1 --max_epochs 200 --train_way 5 --scheduler step --step_size 40 --lr 0.0002  --augment false
+
+Alternatively, use the [trained checkpoint](https://drive.google.com/file/d/1wjh_EBQPYYHFjqoqlKCitcG9mjgkWFRw/view?usp=sharing).
+
+---
+
+### Evaluation
+
+You can evaluate using the [original PT-MAP repository](https://github.com/yhu01/PT-MAP):
+
+1. Clone the PT-MAP repository.
+2. Navigate to `method/pt_map/evaluation/` and replace the files with the ones from this repository.
+3. Edit the following:
+   - Set `checkpoint_dir` in `save_plk.py` to the location of your BPA checkpoint.
+   - Update `_datasetFeaturesFiles` in `FSLTask.py` to point to your feature files.
+4. Create feature files by running:
+```bash
+python save_plk.py --dataset miniImagenet --method S2M2_R --model WideResNet28_10
+```
+5. Then run the evaluation:
+```bash
+   python test_standard.py
+``` 
+
+---
+
+#### Alternatively, evaluate directly within this repository
+
+You can run evaluation directly using the same script as training, with a few extra flags:
+
+```bash
+python train.py \
+  --eval true \
+  --pretrained_path <path_to_checkpoint> \
+  --backbone <backbone_name> \
+  --test_episodes 2000 ```
 ```
 
-We also support logging results into the cloud using the Wandb logger (highly suggested).
+Make sure to include the same arguments you used during training (e.g., `--method`, `--data_path`, etc.) so the evaluation runs consistently.
 
-First, install it via:
-```
+---
+
+### Logging
+We support logging and visualization via Weights & Biases (wandb). This helps track your training and evaluation metrics in real-time.
+
+**To enable logging:**
+
+1. Install the `wandb` package:
+```bash
 pip install wandb
 ```
 
-Then, set the following arguments:
-```
+2. Add the following flags to your command:
+```bash
 --wandb true --project <project_name> --entity <wandb_entity>
 ```
 
-### Fine-tuning
-For WRN-28, we use the pretrained checkpoint from [Manifold Mixup repository](https://github.com/nupurkmr9/S2M2_fewshot).
+Replace `<project_name>` with your wandb project name, and `<wandb_entity>` with your wandb username or team name.
 
-For Resnet-12, we use the pretrained checkpoint from [FEAT](https://github.com/Sha-Lab/FEAT).
-
-Dowload the weights according to the backbone you want and set:
-```
---backbone <model name> --pretrained_path <./path>
-```
-
-### Evaluation
-Run the same you used for training with:
-```
---eval true --pretrained_path <./path> --backbone <backbone_name>
-```
-You can choose the number of episodes by modify
-```
---test_episodes
-```
+---
 
 ## Citation
 
@@ -114,6 +170,8 @@ You can choose the number of episodes by modify
     }
     
 </p>
+
+---
 
 ## Acknowledgment
 [Leveraging the Feature Distribution in Transfer-based Few-Shot Learning](https://github.com/yhu01/PT-MAP)

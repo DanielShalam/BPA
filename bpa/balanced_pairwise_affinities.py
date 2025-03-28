@@ -52,15 +52,15 @@ class BPA(nn.Module):
         Adjust BPA scores using additional labels (e.g. support set in few shot classification)
         We do so by filling the final values of labeled pairs by 0 and 1, according to if they share the same class
         """
-        labels_one_hot = F.one_hot(y).float()
-        mask = (labels_one_hot @ labels_one_hot.T).bool()   # mask[i,j] 1 if y[i] == y[j]
-
-        # pad mask with ones
-        pad_size = x.size(0) - mask.size(0)
+        task_dim = x.ndim - 2
+        labels_one_hot = F.one_hot(y, num_classes=y.max().item() + 1).float()
+        mask = (labels_one_hot @ labels_one_hot.transpose(-2, -1)).bool()  # mask[i,j] 1 if y[i] == y[j]
+        # pad mask
+        pad_size = x.size(task_dim) - mask.size(task_dim)
         pad = (0, pad_size, 0, pad_size)
         # (padding_left, padding_right, padding_top, padding_bottom)
-        x.masked_fill_(F.pad(mask, pad, "constant", 0), value=1)  # mask known positives
-        x.masked_fill_(F.pad(~mask, pad, "constant", 0), value=0)   # mask known negatives
+        x.masked_fill_(F.pad(mask, pad, "constant", False), value=1)  # mask known positives
+        x.masked_fill_(F.pad(~mask, pad, "constant", False), value=0)  # mask known negatives
         return x
 
     def compute_cost_matrix(self, x: Tensor) -> Tensor:

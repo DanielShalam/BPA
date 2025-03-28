@@ -44,7 +44,7 @@ def get_args():
     # wandb specific arguments
     parser.add_argument('--wandb', type=utils.bool_flag, default=False,
                         help=""" Log data into wandb. """)
-    parser.add_argument('--project', type=str, default='',
+    parser.add_argument('--project', type=str, default='BPA',
                         help=""" Project name in wandb. """)
     parser.add_argument('--entity', type=str, default='',
                         help=""" Your wandb entity name. """)
@@ -150,7 +150,8 @@ def main():
 
     # initialized wandb
     if args.wandb:
-        utils.init_wandb(exp_name=output_dir.split('/')[-1], args=args)
+        utils.init_wandb(exp_name=output_dir.split('/')[-1] if output_dir[-1] != '/' else output_dir.split('/')[-2],
+                         args=args)
 
     # define loss
     criterion = utils.get_criterion_by_method(method=args.method)
@@ -219,15 +220,14 @@ def train_one_epoch(model, dataloader, optimizer, fewshot_method, criterion, lab
         loss.backward()
         optimizer.step()
 
-        metric_logger.update(loss=loss.detach().item(),
-                             accuracy=accuracy)
+        metric_logger.update(loss=loss.detach().item(), accuracy=accuracy)
 
         if batch_idx % log_freq == 0:
             utils.wandb_log(
                 {
+                    'train/step': batch_idx + (epoch * n_batches),
                     'train/loss_step': loss.item(),
                     'train/accuracy_step': accuracy,
-                    'train/step': batch_idx + (epoch * n_batches)
                 }
             )
 
@@ -260,8 +260,7 @@ def eval_one_epoch(model, dataloader, fewshot_method, criterion, labels, epoch, 
         q_labels = labels if len(labels) == len(probas) else labels[-len(probas):]
         # loss
         loss = criterion(probas, q_labels)
-        metric_logger.update(loss=loss.detach().item(),
-                             accuracy=accuracy)
+        metric_logger.update(loss=loss.detach().item(), accuracy=accuracy)
 
     print("Averaged stats:", metric_logger)
     utils.wandb_log(

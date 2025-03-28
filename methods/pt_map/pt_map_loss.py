@@ -16,7 +16,6 @@ def centerDatas(X: torch.Tensor, n_lsamples: int):
     X[n_lsamples:, :] = X[n_lsamples:, :] - X[n_lsamples:, :].mean(0, keepdim=True)
     return X
 
-
 # ---------  GaussianModel
 
 class GaussianModel:
@@ -61,7 +60,7 @@ class GaussianModel:
 
     def get_probas(self, X: torch.Tensor, labels: torch.Tensor):
         # compute squared dist to centroids [n_samples][n_ways]
-        dist = (X.unsqueeze(1)-self.mus.unsqueeze(0)).norm(dim=2).pow(2)
+        dist = (X.unsqueeze(1) - self.mus.unsqueeze(0)).norm(dim=2).pow(2)
         p_xj = torch.zeros_like(dist)
         r = torch.ones(1, self.num_way * self.num_query, device='cuda')
         c = torch.ones(1, self.num_way, device='cuda') * self.num_query
@@ -111,7 +110,7 @@ class MAP:
 
 
 class PTMAPLoss(nn.Module):
-    def __init__(self, args: dict, lam: float = 10, alpha: float = 0.2, n_epochs: int = 20, bpa=None):
+    def __init__(self, args: dict, lam: float = 10, alpha: float = 0.2, n_epochs: int = 10, bpa=None):
         super().__init__()
         self.way_dict = dict(train=args['train_way'], val=args['val_way'])
         self.num_shot = args['num_shot']
@@ -135,7 +134,8 @@ class PTMAPLoss(nn.Module):
         self.num_labeled = num_way * self.num_shot
 
         assert X.min() >= 0, \
-            "Error: PT-MAP require non-negative features. You may add ReLU like activation or use switch to WRN backbone."
+            f"Error: PT-MAP require non-negative features while X.min()={X.min()}. " \
+            "You may add ReLU like activation or use switch to WRN backbone."
 
         # power-transform (the PT part) and scaling
         X = torch.pow(X + 1e-6, 0.5)
@@ -143,7 +143,8 @@ class PTMAPLoss(nn.Module):
 
         # applying BPA transform
         if self.BPA is not None:
-            Z = self.BPA(Z, y=labels[:self.num_labeled])
+            Z = self.BPA(Z, labels[:self.num_labeled] if mode != "train" else None)
+            # Z = self.scale(Z, mode=mode)
 
         # MAP
         gaussian_model = GaussianModel(
